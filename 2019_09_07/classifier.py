@@ -93,7 +93,9 @@ history = model.fit_generator(train_generator,
                     # update based on change in batch size
                     steps_per_epoch=3571 // 32,
                     validation_steps=3571 // 32,
-                    epochs=100,
+                    epochs=50,
+                    # # test
+                    # epochs=1,
                     validation_data=validation_generator,
                     callbacks=callbacks)
 
@@ -103,8 +105,8 @@ plt.plot(history.history["val_acc"])
 plt.title("model accuracy")
 plt.ylabel('accuracy')
 plt.xlabel('epoch')
-plt.legend(['train', 'test'], loc='upper left')
-plt.show()
+plt.legend(['train', 'test'], loc='lower right')
+# plt.show()
 plt.savefig("Classifier_accuracy.png")
 plt.close()
 
@@ -113,7 +115,7 @@ plt.plot(history.history["val_loss"])
 plt.title('model loss')
 plt.ylabel('loss')
 plt.xlabel('epoch')
-plt.legend(['train', 'test'], loc='upper left')
-plt.show()
+plt.legend(['train', 'test'], loc='lower right')
+# plt.show()
 plt.savefig("Classifier_loss.png")
 plt.close()
