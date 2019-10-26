@@ -43,7 +43,7 @@ def read_data():
         image_gender_label = raw_gender_label[i - 1]
         # print(image_gender_label, image_smile_label)
         raw_data = np.asarray(image, dtype="int32")
-        data = np.reshape(raw_data, (64, 64, ))
+        data = np.reshape(raw_data, (64, 64, 1))
         x_train.append(data)
         # note the result for categorical classification
         # is an array with only one element to be 0
@@ -102,8 +102,8 @@ model.summary()
 history = model.fit(
     x=X_train,
     y=y_gender_train,
-    steps_per_epoch=3571 // 32,
-    validation_steps=3571 // 32,
+    steps_per_epoch= 2539 // 32,
+    validation_steps= 2539 // 32,
     epochs=100,
     validation_data=(X_test, y_gender_test),
     # callbacks=callbacks,
