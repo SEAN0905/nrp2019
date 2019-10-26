@@ -9,7 +9,7 @@ from keras import regularizers
 from keras.callbacks import EarlyStopping, ModelCheckpoint
 import matplotlib.pyplot as plt
 
-dataset_base_path = "GENKI_4K_16/"
+dataset_base_path = "GENKI_4K_64/"
 
 
 def read_data():
@@ -43,7 +43,7 @@ def read_data():
         image_gender_label = raw_gender_label[i - 1]
         # print(image_gender_label, image_smile_label)
         raw_data = np.asarray(image, dtype="int32")
-        data = np.reshape(raw_data, (16, 16, 1))
+        data = np.reshape(raw_data, (64, 64, ))
         x_train.append(data)
         # note the result for categorical classification
         # is an array with only one element to be 0
@@ -60,6 +60,7 @@ X_data, Y_gender = read_data()
 test_split = 0.1
 train_num = int(len(X_data) * (1 - test_split))
 
+# 2539: 283
 X_train = X_data[:train_num]
 X_test = X_data[train_num:]
 
@@ -71,7 +72,7 @@ model = Sequential([
            kernel_size=3,
            padding='same',
            activation='relu',
-           input_shape=(16, 16, 1)),
+           input_shape=(64, 64, 1)),
     BatchNormalization(),
     MaxPooling2D(pool_size=(2, 2)),
     Conv2D(filters=64, kernel_size=3, padding='same', activation='relu'),
@@ -85,7 +86,7 @@ model = Sequential([
     Dense(2, activation='softmax')
 ])
 
-model.compile(loss='binary_crossentropy', optimizer='sgd', metrics=['acc'])
+model.compile(loss='categorical_crossentropy', optimizer='sgd', metrics=['acc'])
 
 model.summary()
 
