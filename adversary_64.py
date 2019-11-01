@@ -105,7 +105,7 @@ history = model.fit(
     batch_size=32,
     # steps_per_epoch= 2539 // 32,
     # validation_steps= 2539 // 32,
-    epochs=100,
+    epochs=50,
     validation_data=(X_test, y_gender_test),
     # callbacks=callbacks,
 )
