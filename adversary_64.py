@@ -4,7 +4,7 @@ from PIL import Image
 import glob, os, random
 from keras.preprocessing.image import ImageDataGenerator, load_img, img_to_array, array_to_img
 from keras.layers import Conv2D, Flatten, MaxPooling2D, Dense, BatchNormalization, Dropout
-from keras.models import Sequential
+from keras.models import Sequential, load_model
 from keras import regularizers
 from keras.callbacks import EarlyStopping, ModelCheckpoint
 import matplotlib.pyplot as plt
@@ -78,13 +78,15 @@ model = Sequential([
     Conv2D(filters=64, kernel_size=3, padding='same', activation='relu'),
     BatchNormalization(),
     MaxPooling2D(pool_size=(2, 2)),
-    Dense(1024, kernel_initializer='random_uniform', activation='relu'),
+    Dense(1024, kernel_initializer='random_uniform', activation='relu', kernel_regularizer=regularizers.l2(0.1)),
     BatchNormalization(),
-    Dense(1024, kernel_initializer='random_uniform', activation='relu'),
+    Dense(1024, kernel_initializer='random_uniform', activation='relu', kernel_regularizer=regularizers.l2(0.1)),
     BatchNormalization(),
     Flatten(),
     Dense(2, activation='softmax')
 ])
+
+model.load_weights("adversary_64.h5")
 
 model.compile(loss='categorical_crossentropy', optimizer='sgd', metrics=['acc'])
 
