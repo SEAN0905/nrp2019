@@ -91,7 +91,7 @@ history = model.fit_generator(
     # update based on change in batch size
     steps_per_epoch=3571 // 32,
     validation_steps=3571 // 32,
-    epochs=50,
+    epochs=300,
     validation_data=validation_generator,
     callbacks=callbacks)
 
