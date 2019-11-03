@@ -12,8 +12,8 @@ from keras import regularizers
 from keras.callbacks import EarlyStopping, ModelCheckpoint
 import matplotlib.pyplot as plt
 
-base_path = "../dataset/face64"
-# base_path = "face64"
+# base_path = "../dataset/face64"
+base_path = "face64"
 
 train_datagen = ImageDataGenerator(
     rescale=1. / 255,
