@@ -68,21 +68,25 @@ y_gender_train = Y_gender[:train_num]
 y_gender_test = Y_gender[train_num:]
 
 model = Sequential([
-    Conv2D(filters=32,
-           kernel_size=3,
-           padding='same',
-           activation='relu',
-           input_shape=(16, 16, 1)),
+    Conv2D(
+        filters=32,
+        kernel_size=(3, 3),
+        padding='same',
+        activation='relu',
+        input_shape=(64, 64, 1)),
     BatchNormalization(),
     MaxPooling2D(pool_size=(2, 2)),
-    Conv2D(filters=64, kernel_size=3, padding='same', activation='relu'),
+    Conv2D(filters=64, kernel_size=(3, 3), padding='same', activation='relu'),
     BatchNormalization(),
     MaxPooling2D(pool_size=(2, 2)),
-    Dense(1024, kernel_initializer='random_uniform', activation='relu', kernel_regularizer=regularizers.l2(0.1)),
+    Dense(1024, kernel_initializer='random_uniform',
+          activation='relu', kernel_regularizer=regularizers.l2(0.1)),
     BatchNormalization(),
-    Dense(1024, kernel_initializer='random_uniform', activation='relu', kernel_regularizer=regularizers.l2(0.1)),
+    Dense(1024, kernel_initializer='random_uniform',
+          activation='relu', kernel_regularizer=regularizers.l2(0.1)),
     BatchNormalization(),
     Flatten(),
+    # supposed to be 2 results for prediction, one predicting smile and the other not
     Dense(2, activation='softmax')
 ])
 

@@ -1,5 +1,10 @@
+# the file is to write a adversary model based on image data generator
+# the model has been regularized with the kernel_regularizer in model
+
 import numpy as np
-import glob, os, random
+import glob
+import os
+import random
 from keras.preprocessing.image import ImageDataGenerator, load_img, img_to_array, array_to_img
 from keras.layers import Conv2D, Flatten, MaxPooling2D, Dense, BatchNormalization, Dropout
 from keras.models import Sequential
@@ -10,28 +15,16 @@ import matplotlib.pyplot as plt
 # base_path = "../dataset/face64"
 base_path = "face64"
 
-# img_list = glob.glob(os.path.join(base_path, "*/*.jpg"))
-
 train_datagen = ImageDataGenerator(
     rescale=1. / 255,
-    # # remove unnecessary manipulation of the faces
-    #    shear_range=0.1,
-    #    zoom_range=0.1,
-    #    width_shift_range=0.1,
-    #    height_shift_range=0.1,
-    #    horizontal_flip=True,
-    #    vertical_flip=True,
     validation_split=0.2,
 )
-
-# test_datagen = ImageDataGenerator(rescale=1. / 255, validation_split=0.20)
 
 # should create separate y_train instead
 train_generator = train_datagen.flow_from_directory(
     base_path,
     color_mode="grayscale",
     target_size=(64, 64),
-    # 200 too big for batch size
     batch_size=32,
     class_mode='categorical',
     subset='training',
@@ -52,33 +45,32 @@ validation_generator = train_datagen.flow_from_directory(
 labels = (train_generator.class_indices)
 labels = dict((v, k) for k, v in labels.items())
 
-print(train_generator[0][1])
+# print(train_generator[0][1])
 
 model = Sequential([
     Conv2D(
         filters=32,
-        kernel_size=3,
+        kernel_size=(3, 3),
         padding='same',
         activation='relu',
-        # set reading mode to get "grayscale"
         input_shape=(64, 64, 1)),
     BatchNormalization(),
-    # # remove additional layer coming from imagination
-    # Conv2D(filters=64, kernel_size=3, padding='same', activation='relu'),
     MaxPooling2D(pool_size=(2, 2)),
-    Conv2D(filters=64, kernel_size=3, padding='same', activation='relu'),
+    Conv2D(filters=64, kernel_size=(3, 3), padding='same', activation='relu'),
     BatchNormalization(),
     MaxPooling2D(pool_size=(2, 2)),
-    Dense(1024, kernel_initializer='random_uniform', activation='relu'),
+    Dense(1024, kernel_initializer='random_uniform',
+          activation='relu', kernel_regularizer=regularizers.l2(0.1)),
     BatchNormalization(),
-    Dense(1024, kernel_initializer='random_uniform', activation='relu'),
+    Dense(1024, kernel_initializer='random_uniform',
+          activation='relu', kernel_regularizer=regularizers.l2(0.1)),
     BatchNormalization(),
     Flatten(),
-    # supposed to be 2 for prediction, one predicting smile and the other not
+    # supposed to be 2 results for prediction, one predicting smile and the other not
     Dense(2, activation='softmax')
 ])
 
-model.load_weights("img_64.h5")
+model.load_weights("adversary_imggen_overall.h5")
 
 model.compile(loss='binary_crossentropy', optimizer='sgd', metrics=['acc'])
 
@@ -86,7 +78,7 @@ model.summary()
 
 callbacks = [
     EarlyStopping(monitor='val_acc', patience=200, verbose=1),
-    ModelCheckpoint(filepath="model_checkpoint1.h5py",
+    ModelCheckpoint(filepath="adversary_imggen_checkpoint.h5py",
                     monitor='val_acc',
                     save_best_only=True,
                     verbose=1)
@@ -102,4 +94,4 @@ history = model.fit_generator(
     callbacks=callbacks)
 
 print(history.history.keys())
-model.save_weights("img_64.h5")
+model.save_weights("adversary_imggen_overall.h5")

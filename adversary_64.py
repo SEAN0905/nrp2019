@@ -1,7 +1,9 @@
 # a santized version of adversary model to train the gender classifier beforehand
 import numpy as np
 from PIL import Image
-import glob, os, random
+import glob
+import os
+import random
 from keras.preprocessing.image import ImageDataGenerator, load_img, img_to_array, array_to_img
 from keras.layers import Conv2D, Flatten, MaxPooling2D, Dense, BatchNormalization, Dropout
 from keras.models import Sequential, load_model
@@ -68,27 +70,32 @@ y_gender_train = Y_gender[:train_num]
 y_gender_test = Y_gender[train_num:]
 
 model = Sequential([
-    Conv2D(filters=32,
-           kernel_size=3,
-           padding='same',
-           activation='relu',
-           input_shape=(64, 64, 1)),
+    Conv2D(
+        filters=32,
+        kernel_size=(3, 3),
+        padding='same',
+        activation='relu',
+        input_shape=(64, 64, 1)),
     BatchNormalization(),
     MaxPooling2D(pool_size=(2, 2)),
-    Conv2D(filters=64, kernel_size=3, padding='same', activation='relu'),
+    Conv2D(filters=64, kernel_size=(3, 3), padding='same', activation='relu'),
     BatchNormalization(),
     MaxPooling2D(pool_size=(2, 2)),
-    Dense(1024, kernel_initializer='random_uniform', activation='relu', kernel_regularizer=regularizers.l2(0.1)),
+    Dense(1024, kernel_initializer='random_uniform',
+          activation='relu', kernel_regularizer=regularizers.l2(0.1)),
     BatchNormalization(),
-    Dense(1024, kernel_initializer='random_uniform', activation='relu', kernel_regularizer=regularizers.l2(0.1)),
+    Dense(1024, kernel_initializer='random_uniform',
+          activation='relu', kernel_regularizer=regularizers.l2(0.1)),
     BatchNormalization(),
     Flatten(),
+    # supposed to be 2 results for prediction, one predicting smile and the other not
     Dense(2, activation='softmax')
 ])
 
 model.load_weights("adversary_64.h5")
 
-model.compile(loss='categorical_crossentropy', optimizer='sgd', metrics=['acc'])
+model.compile(loss='categorical_crossentropy',
+              optimizer='sgd', metrics=['acc'])
 
 model.summary()
 
