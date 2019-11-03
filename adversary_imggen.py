@@ -60,10 +60,12 @@ model = Sequential([
     BatchNormalization(),
     MaxPooling2D(pool_size=(2, 2)),
     Dense(1024, kernel_initializer='random_uniform',
-          activation='relu', kernel_regularizer=regularizers.l2(0.1)),
+        # ########### change next line's l2 parameter to tune
+          activation='relu', kernel_regularizer=regularizers.l2(0.01)),
     BatchNormalization(),
     Dense(1024, kernel_initializer='random_uniform',
-          activation='relu', kernel_regularizer=regularizers.l2(0.1)),
+        # ########### change next line's l2 parameter to tune
+          activation='relu', kernel_regularizer=regularizers.l2(0.2)),
     BatchNormalization(),
     Flatten(),
     # supposed to be 2 results for prediction, one predicting smile and the other not
