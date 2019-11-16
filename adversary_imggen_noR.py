@@ -16,7 +16,7 @@ import matplotlib.pyplot as plt
 base_path = "face64"
 
 train_datagen = ImageDataGenerator(
-    rescale=1. / 255,
+    # rescale=1. / 255,
     validation_split=0.2,
 )
 
@@ -30,6 +30,12 @@ train_generator = train_datagen.flow_from_directory(base_path,
                                                     shuffle=True)
 
 # print(train_generator[0][0].shape)
+
+for f in train_generator:
+    for p in f[0]:
+        p = p.reshape((64,64))
+        plt.imshow(p.astype('uint8'),cmap='gray')
+        plt.show()
 
 validation_generator = train_datagen.flow_from_directory(
     base_path,
