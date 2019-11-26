@@ -72,7 +72,7 @@ model = Sequential([
     Dense(2, activation='softmax')
 ])
 
-# model.load_weights("adversary_imggen_overall.h5")
+model.load_weights("adversary_gen_overall.h5")
 
 model.compile(loss='binary_crossentropy', optimizer='sgd', metrics=['acc'])
 
