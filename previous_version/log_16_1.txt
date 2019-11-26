@@ -1,0 +1,383 @@
+Using TensorFlow backend.
+WARNING: Logging before flag parsing goes to stderr.
+W1101 20:31:18.804765 4388804032 deprecation_wrapper.py:119] From /Library/Frameworks/Python.framework/Versions/3.7/lib/python3.7/site-packages/keras/backend/tensorflow_backend.py:74: The name tf.get_default_graph is deprecated. Please use tf.compat.v1.get_default_graph instead.
+
+W1101 20:31:18.887322 4388804032 deprecation_wrapper.py:119] From /Library/Frameworks/Python.framework/Versions/3.7/lib/python3.7/site-packages/keras/backend/tensorflow_backend.py:517: The name tf.placeholder is deprecated. Please use tf.compat.v1.placeholder instead.
+
+W1101 20:31:18.980652 4388804032 deprecation_wrapper.py:119] From /Library/Frameworks/Python.framework/Versions/3.7/lib/python3.7/site-packages/keras/backend/tensorflow_backend.py:4138: The name tf.random_uniform is deprecated. Please use tf.random.uniform instead.
+
+W1101 20:31:19.052187 4388804032 deprecation_wrapper.py:119] From /Library/Frameworks/Python.framework/Versions/3.7/lib/python3.7/site-packages/keras/backend/tensorflow_backend.py:174: The name tf.get_default_session is deprecated. Please use tf.compat.v1.get_default_session instead.
+
+W1101 20:31:19.052350 4388804032 deprecation_wrapper.py:119] From /Library/Frameworks/Python.framework/Versions/3.7/lib/python3.7/site-packages/keras/backend/tensorflow_backend.py:181: The name tf.ConfigProto is deprecated. Please use tf.compat.v1.ConfigProto instead.
+
+2019-11-01 20:31:19.060299: I tensorflow/core/platform/cpu_feature_guard.cc:142] Your CPU supports instructions that this TensorFlow binary was not compiled to use: AVX2 FMA
+W1101 20:31:19.405834 4388804032 deprecation_wrapper.py:119] From /Library/Frameworks/Python.framework/Versions/3.7/lib/python3.7/site-packages/keras/backend/tensorflow_backend.py:1834: The name tf.nn.fused_batch_norm is deprecated. Please use tf.compat.v1.nn.fused_batch_norm instead.
+
+W1101 20:31:19.492411 4388804032 deprecation_wrapper.py:119] From /Library/Frameworks/Python.framework/Versions/3.7/lib/python3.7/site-packages/keras/backend/tensorflow_backend.py:3976: The name tf.nn.max_pool is deprecated. Please use tf.nn.max_pool2d instead.
+
+W1101 20:31:19.734501 4388804032 deprecation_wrapper.py:119] From /Library/Frameworks/Python.framework/Versions/3.7/lib/python3.7/site-packages/keras/optimizers.py:790: The name tf.train.Optimizer is deprecated. Please use tf.compat.v1.train.Optimizer instead.
+
+W1101 20:31:19.753352 4388804032 deprecation.py:323] From /Library/Frameworks/Python.framework/Versions/3.7/lib/python3.7/site-packages/tensorflow/python/ops/nn_impl.py:180: add_dispatch_support.<locals>.wrapper (from tensorflow.python.ops.array_ops) is deprecated and will be removed in a future version.
+Instructions for updating:
+Use tf.where in 2.0, which has the same broadcast rule as np.where
+_________________________________________________________________
+Layer (type)                 Output Shape              Param #   
+=================================================================
+conv2d_1 (Conv2D)            (None, 16, 16, 32)        320       
+_________________________________________________________________
+batch_normalization_1 (Batch (None, 16, 16, 32)        128       
+_________________________________________________________________
+max_pooling2d_1 (MaxPooling2 (None, 8, 8, 32)          0         
+_________________________________________________________________
+conv2d_2 (Conv2D)            (None, 8, 8, 64)          18496     
+_________________________________________________________________
+batch_normalization_2 (Batch (None, 8, 8, 64)          256       
+_________________________________________________________________
+max_pooling2d_2 (MaxPooling2 (None, 4, 4, 64)          0         
+_________________________________________________________________
+dense_1 (Dense)              (None, 4, 4, 1024)        66560     
+_________________________________________________________________
+batch_normalization_3 (Batch (None, 4, 4, 1024)        4096      
+_________________________________________________________________
+dense_2 (Dense)              (None, 4, 4, 1024)        1049600   
+_________________________________________________________________
+batch_normalization_4 (Batch (None, 4, 4, 1024)        4096      
+_________________________________________________________________
+flatten_1 (Flatten)          (None, 16384)             0         
+_________________________________________________________________
+dense_3 (Dense)              (None, 2)                 32770     
+=================================================================
+Total params: 1,176,322
+Trainable params: 1,172,034
+Non-trainable params: 4,288
+_________________________________________________________________
+Train on 2539 samples, validate on 283 samples
+Traceback (most recent call last):
+  File "adversary_16.py", line 109, in <module>
+    validation_data=(X_test, y_gender_test),
+  File "/Library/Frameworks/Python.framework/Versions/3.7/lib/python3.7/site-packages/keras/engine/training.py", line 1039, in fit
+    validation_steps=validation_steps)
+  File "/Library/Frameworks/Python.framework/Versions/3.7/lib/python3.7/site-packages/keras/engine/training_arrays.py", line 90, in fit_loop
+    steps_name='steps_per_epoch')
+  File "/Library/Frameworks/Python.framework/Versions/3.7/lib/python3.7/site-packages/keras/engine/training_utils.py", line 563, in check_num_samples
+    'If ' + steps_name + ' is set, the `batch_size` must be None.')
+ValueError: If steps_per_epoch is set, the `batch_size` must be None.
+sakais-MacBook-Pro:nrp2019 ue$ python3 adversary_16.py
+Using TensorFlow backend.
+WARNING: Logging before flag parsing goes to stderr.
+W1101 20:31:45.405297 4636726720 deprecation_wrapper.py:119] From /Library/Frameworks/Python.framework/Versions/3.7/lib/python3.7/site-packages/keras/backend/tensorflow_backend.py:74: The name tf.get_default_graph is deprecated. Please use tf.compat.v1.get_default_graph instead.
+
+W1101 20:31:45.420698 4636726720 deprecation_wrapper.py:119] From /Library/Frameworks/Python.framework/Versions/3.7/lib/python3.7/site-packages/keras/backend/tensorflow_backend.py:517: The name tf.placeholder is deprecated. Please use tf.compat.v1.placeholder instead.
+
+W1101 20:31:45.423094 4636726720 deprecation_wrapper.py:119] From /Library/Frameworks/Python.framework/Versions/3.7/lib/python3.7/site-packages/keras/backend/tensorflow_backend.py:4138: The name tf.random_uniform is deprecated. Please use tf.random.uniform instead.
+
+W1101 20:31:45.453883 4636726720 deprecation_wrapper.py:119] From /Library/Frameworks/Python.framework/Versions/3.7/lib/python3.7/site-packages/keras/backend/tensorflow_backend.py:174: The name tf.get_default_session is deprecated. Please use tf.compat.v1.get_default_session instead.
+
+W1101 20:31:45.454257 4636726720 deprecation_wrapper.py:119] From /Library/Frameworks/Python.framework/Versions/3.7/lib/python3.7/site-packages/keras/backend/tensorflow_backend.py:181: The name tf.ConfigProto is deprecated. Please use tf.compat.v1.ConfigProto instead.
+
+2019-11-01 20:31:45.454704: I tensorflow/core/platform/cpu_feature_guard.cc:142] Your CPU supports instructions that this TensorFlow binary was not compiled to use: AVX2 FMA
+W1101 20:31:45.479951 4636726720 deprecation_wrapper.py:119] From /Library/Frameworks/Python.framework/Versions/3.7/lib/python3.7/site-packages/keras/backend/tensorflow_backend.py:1834: The name tf.nn.fused_batch_norm is deprecated. Please use tf.compat.v1.nn.fused_batch_norm instead.
+
+W1101 20:31:45.545989 4636726720 deprecation_wrapper.py:119] From /Library/Frameworks/Python.framework/Versions/3.7/lib/python3.7/site-packages/keras/backend/tensorflow_backend.py:3976: The name tf.nn.max_pool is deprecated. Please use tf.nn.max_pool2d instead.
+
+W1101 20:31:45.775056 4636726720 deprecation_wrapper.py:119] From /Library/Frameworks/Python.framework/Versions/3.7/lib/python3.7/site-packages/keras/optimizers.py:790: The name tf.train.Optimizer is deprecated. Please use tf.compat.v1.train.Optimizer instead.
+
+W1101 20:31:45.791887 4636726720 deprecation.py:323] From /Library/Frameworks/Python.framework/Versions/3.7/lib/python3.7/site-packages/tensorflow/python/ops/nn_impl.py:180: add_dispatch_support.<locals>.wrapper (from tensorflow.python.ops.array_ops) is deprecated and will be removed in a future version.
+Instructions for updating:
+Use tf.where in 2.0, which has the same broadcast rule as np.where
+_________________________________________________________________
+Layer (type)                 Output Shape              Param #   
+=================================================================
+conv2d_1 (Conv2D)            (None, 16, 16, 32)        320       
+_________________________________________________________________
+batch_normalization_1 (Batch (None, 16, 16, 32)        128       
+_________________________________________________________________
+max_pooling2d_1 (MaxPooling2 (None, 8, 8, 32)          0         
+_________________________________________________________________
+conv2d_2 (Conv2D)            (None, 8, 8, 64)          18496     
+_________________________________________________________________
+batch_normalization_2 (Batch (None, 8, 8, 64)          256       
+_________________________________________________________________
+max_pooling2d_2 (MaxPooling2 (None, 4, 4, 64)          0         
+_________________________________________________________________
+dense_1 (Dense)              (None, 4, 4, 1024)        66560     
+_________________________________________________________________
+batch_normalization_3 (Batch (None, 4, 4, 1024)        4096      
+_________________________________________________________________
+dense_2 (Dense)              (None, 4, 4, 1024)        1049600   
+_________________________________________________________________
+batch_normalization_4 (Batch (None, 4, 4, 1024)        4096      
+_________________________________________________________________
+flatten_1 (Flatten)          (None, 16384)             0         
+_________________________________________________________________
+dense_3 (Dense)              (None, 2)                 32770     
+=================================================================
+Total params: 1,176,322
+Trainable params: 1,172,034
+Non-trainable params: 4,288
+_________________________________________________________________
+Train on 2539 samples, validate on 283 samples
+Traceback (most recent call last):
+  File "adversary_16.py", line 108, in <module>
+    validation_data=(X_test, y_gender_test),
+  File "/Library/Frameworks/Python.framework/Versions/3.7/lib/python3.7/site-packages/keras/engine/training.py", line 1039, in fit
+    validation_steps=validation_steps)
+  File "/Library/Frameworks/Python.framework/Versions/3.7/lib/python3.7/site-packages/keras/engine/training_arrays.py", line 77, in fit_loop
+    raise ValueError('Can only use `validation_steps` '
+ValueError: Can only use `validation_steps` when doing step-wise training, i.e. `steps_per_epoch` must be set.
+sakais-MacBook-Pro:nrp2019 ue$ python3 adversary_16.py
+Using TensorFlow backend.
+WARNING: Logging before flag parsing goes to stderr.
+W1101 20:32:13.769306 4599309760 deprecation_wrapper.py:119] From /Library/Frameworks/Python.framework/Versions/3.7/lib/python3.7/site-packages/keras/backend/tensorflow_backend.py:74: The name tf.get_default_graph is deprecated. Please use tf.compat.v1.get_default_graph instead.
+
+W1101 20:32:13.784717 4599309760 deprecation_wrapper.py:119] From /Library/Frameworks/Python.framework/Versions/3.7/lib/python3.7/site-packages/keras/backend/tensorflow_backend.py:517: The name tf.placeholder is deprecated. Please use tf.compat.v1.placeholder instead.
+
+W1101 20:32:13.801127 4599309760 deprecation_wrapper.py:119] From /Library/Frameworks/Python.framework/Versions/3.7/lib/python3.7/site-packages/keras/backend/tensorflow_backend.py:4138: The name tf.random_uniform is deprecated. Please use tf.random.uniform instead.
+
+W1101 20:32:13.830294 4599309760 deprecation_wrapper.py:119] From /Library/Frameworks/Python.framework/Versions/3.7/lib/python3.7/site-packages/keras/backend/tensorflow_backend.py:174: The name tf.get_default_session is deprecated. Please use tf.compat.v1.get_default_session instead.
+
+W1101 20:32:13.830927 4599309760 deprecation_wrapper.py:119] From /Library/Frameworks/Python.framework/Versions/3.7/lib/python3.7/site-packages/keras/backend/tensorflow_backend.py:181: The name tf.ConfigProto is deprecated. Please use tf.compat.v1.ConfigProto instead.
+
+2019-11-01 20:32:13.831314: I tensorflow/core/platform/cpu_feature_guard.cc:142] Your CPU supports instructions that this TensorFlow binary was not compiled to use: AVX2 FMA
+W1101 20:32:13.858520 4599309760 deprecation_wrapper.py:119] From /Library/Frameworks/Python.framework/Versions/3.7/lib/python3.7/site-packages/keras/backend/tensorflow_backend.py:1834: The name tf.nn.fused_batch_norm is deprecated. Please use tf.compat.v1.nn.fused_batch_norm instead.
+
+W1101 20:32:13.917123 4599309760 deprecation_wrapper.py:119] From /Library/Frameworks/Python.framework/Versions/3.7/lib/python3.7/site-packages/keras/backend/tensorflow_backend.py:3976: The name tf.nn.max_pool is deprecated. Please use tf.nn.max_pool2d instead.
+
+W1101 20:32:14.152163 4599309760 deprecation_wrapper.py:119] From /Library/Frameworks/Python.framework/Versions/3.7/lib/python3.7/site-packages/keras/optimizers.py:790: The name tf.train.Optimizer is deprecated. Please use tf.compat.v1.train.Optimizer instead.
+
+W1101 20:32:14.169301 4599309760 deprecation.py:323] From /Library/Frameworks/Python.framework/Versions/3.7/lib/python3.7/site-packages/tensorflow/python/ops/nn_impl.py:180: add_dispatch_support.<locals>.wrapper (from tensorflow.python.ops.array_ops) is deprecated and will be removed in a future version.
+Instructions for updating:
+Use tf.where in 2.0, which has the same broadcast rule as np.where
+_________________________________________________________________
+Layer (type)                 Output Shape              Param #   
+=================================================================
+conv2d_1 (Conv2D)            (None, 16, 16, 32)        320       
+_________________________________________________________________
+batch_normalization_1 (Batch (None, 16, 16, 32)        128       
+_________________________________________________________________
+max_pooling2d_1 (MaxPooling2 (None, 8, 8, 32)          0         
+_________________________________________________________________
+conv2d_2 (Conv2D)            (None, 8, 8, 64)          18496     
+_________________________________________________________________
+batch_normalization_2 (Batch (None, 8, 8, 64)          256       
+_________________________________________________________________
+max_pooling2d_2 (MaxPooling2 (None, 4, 4, 64)          0         
+_________________________________________________________________
+dense_1 (Dense)              (None, 4, 4, 1024)        66560     
+_________________________________________________________________
+batch_normalization_3 (Batch (None, 4, 4, 1024)        4096      
+_________________________________________________________________
+dense_2 (Dense)              (None, 4, 4, 1024)        1049600   
+_________________________________________________________________
+batch_normalization_4 (Batch (None, 4, 4, 1024)        4096      
+_________________________________________________________________
+flatten_1 (Flatten)          (None, 16384)             0         
+_________________________________________________________________
+dense_3 (Dense)              (None, 2)                 32770     
+=================================================================
+Total params: 1,176,322
+Trainable params: 1,172,034
+Non-trainable params: 4,288
+_________________________________________________________________
+Train on 2539 samples, validate on 283 samples
+Epoch 1/100
+2539/2539 [==============================] - 7s 3ms/step - loss: 83.8615 - acc: 0.5329 - val_loss: 71.0592 - val_acc: 0.4700
+Epoch 2/100
+2539/2539 [==============================] - 6s 2ms/step - loss: 62.2139 - acc: 0.5451 - val_loss: 53.4954 - val_acc: 0.5265
+Epoch 3/100
+2539/2539 [==============================] - 8s 3ms/step - loss: 46.0536 - acc: 0.5738 - val_loss: 39.7926 - val_acc: 0.5406
+Epoch 4/100
+2539/2539 [==============================] - 6s 3ms/step - loss: 34.0692 - acc: 0.5837 - val_loss: 29.0250 - val_acc: 0.4770
+Epoch 5/100
+2539/2539 [==============================] - 6s 2ms/step - loss: 25.7627 - acc: 0.5758 - val_loss: 20.8599 - val_acc: 0.5336
+Epoch 6/100
+2539/2539 [==============================] - 6s 2ms/step - loss: 18.8215 - acc: 0.5837 - val_loss: 17.6236 - val_acc: 0.5618
+Epoch 7/100
+2539/2539 [==============================] - 6s 2ms/step - loss: 15.2422 - acc: 0.5758 - val_loss: 15.7596 - val_acc: 0.5548
+Epoch 8/100
+2539/2539 [==============================] - 6s 2ms/step - loss: 12.3285 - acc: 0.5691 - val_loss: 13.3012 - val_acc: 0.4876
+Epoch 9/100
+2539/2539 [==============================] - 6s 2ms/step - loss: 9.4684 - acc: 0.5738 - val_loss: 7.6565 - val_acc: 0.5371
+Epoch 10/100
+2539/2539 [==============================] - 6s 2ms/step - loss: 7.0504 - acc: 0.5833 - val_loss: 8.8301 - val_acc: 0.5724
+Epoch 11/100
+2539/2539 [==============================] - 6s 2ms/step - loss: 6.1989 - acc: 0.5742 - val_loss: 5.0456 - val_acc: 0.5159
+Epoch 12/100
+2539/2539 [==============================] - 6s 2ms/step - loss: 6.4610 - acc: 0.5569 - val_loss: 6.3699 - val_acc: 0.5194
+Epoch 13/100
+2539/2539 [==============================] - 6s 2ms/step - loss: 5.3500 - acc: 0.5530 - val_loss: 6.6505 - val_acc: 0.4558
+Epoch 14/100
+2539/2539 [==============================] - 6s 2ms/step - loss: 5.1373 - acc: 0.5620 - val_loss: 5.0854 - val_acc: 0.5336
+Epoch 15/100
+2539/2539 [==============================] - 6s 2ms/step - loss: 4.4726 - acc: 0.5687 - val_loss: 6.1372 - val_acc: 0.5795
+Epoch 16/100
+2539/2539 [==============================] - 6s 2ms/step - loss: 4.9468 - acc: 0.5545 - val_loss: 6.7150 - val_acc: 0.4382
+Epoch 17/100
+2539/2539 [==============================] - 6s 2ms/step - loss: 3.1650 - acc: 0.5715 - val_loss: 4.0472 - val_acc: 0.5124
+Epoch 18/100
+2539/2539 [==============================] - 6s 2ms/step - loss: 3.0818 - acc: 0.5475 - val_loss: 4.4983 - val_acc: 0.4770
+Epoch 19/100
+2539/2539 [==============================] - 6s 2ms/step - loss: 3.2572 - acc: 0.5790 - val_loss: 1.9315 - val_acc: 0.5406
+Epoch 20/100
+2539/2539 [==============================] - 6s 2ms/step - loss: 2.8690 - acc: 0.5695 - val_loss: 5.1457 - val_acc: 0.4735
+Epoch 21/100
+2539/2539 [==============================] - 6s 2ms/step - loss: 2.2040 - acc: 0.5778 - val_loss: 7.9550 - val_acc: 0.5088
+Epoch 22/100
+2539/2539 [==============================] - 6s 2ms/step - loss: 2.5539 - acc: 0.5624 - val_loss: 1.8913 - val_acc: 0.4806
+Epoch 23/100
+2539/2539 [==============================] - 6s 2ms/step - loss: 2.2880 - acc: 0.5514 - val_loss: 7.9694 - val_acc: 0.4912
+Epoch 24/100
+2539/2539 [==============================] - 6s 2ms/step - loss: 2.1355 - acc: 0.5699 - val_loss: 2.1526 - val_acc: 0.4947
+Epoch 25/100
+2539/2539 [==============================] - 6s 2ms/step - loss: 1.7205 - acc: 0.5959 - val_loss: 1.4578 - val_acc: 0.4912
+Epoch 26/100
+2539/2539 [==============================] - 6s 2ms/step - loss: 1.7580 - acc: 0.5876 - val_loss: 2.0884 - val_acc: 0.5477
+Epoch 27/100
+2539/2539 [==============================] - 6s 2ms/step - loss: 2.5261 - acc: 0.5770 - val_loss: 2.2305 - val_acc: 0.6042
+Epoch 28/100
+2539/2539 [==============================] - 6s 2ms/step - loss: 2.0677 - acc: 0.5872 - val_loss: 1.6213 - val_acc: 0.5548
+Epoch 29/100
+2539/2539 [==============================] - 6s 2ms/step - loss: 1.9767 - acc: 0.5683 - val_loss: 1.3945 - val_acc: 0.5477
+Epoch 30/100
+2539/2539 [==============================] - 6s 2ms/step - loss: 1.6000 - acc: 0.5790 - val_loss: 1.3835 - val_acc: 0.5088
+Epoch 31/100
+2539/2539 [==============================] - 6s 2ms/step - loss: 1.3569 - acc: 0.5601 - val_loss: 1.7063 - val_acc: 0.4664
+Epoch 32/100
+2539/2539 [==============================] - 6s 2ms/step - loss: 1.1230 - acc: 0.5908 - val_loss: 0.9049 - val_acc: 0.6042
+Epoch 33/100
+2539/2539 [==============================] - 6s 2ms/step - loss: 0.8929 - acc: 0.6325 - val_loss: 0.9031 - val_acc: 0.5548
+Epoch 34/100
+2539/2539 [==============================] - 6s 2ms/step - loss: 0.8136 - acc: 0.6534 - val_loss: 0.9280 - val_acc: 0.5406
+Epoch 35/100
+2539/2539 [==============================] - 6s 2ms/step - loss: 0.7771 - acc: 0.6573 - val_loss: 0.8750 - val_acc: 0.6042
+Epoch 36/100
+2539/2539 [==============================] - 6s 2ms/step - loss: 0.7239 - acc: 0.6593 - val_loss: 0.9555 - val_acc: 0.5830
+Epoch 37/100
+2539/2539 [==============================] - 6s 2ms/step - loss: 0.7051 - acc: 0.6833 - val_loss: 0.9934 - val_acc: 0.5654
+Epoch 38/100
+2539/2539 [==============================] - 6s 2ms/step - loss: 0.6898 - acc: 0.6877 - val_loss: 1.1325 - val_acc: 0.5265
+Epoch 39/100
+2539/2539 [==============================] - 6s 2ms/step - loss: 0.6737 - acc: 0.7019 - val_loss: 1.1336 - val_acc: 0.5724
+Epoch 40/100
+2539/2539 [==============================] - 6s 2ms/step - loss: 0.6970 - acc: 0.6833 - val_loss: 1.0072 - val_acc: 0.5760
+Epoch 41/100
+2539/2539 [==============================] - 6s 2ms/step - loss: 0.6811 - acc: 0.7070 - val_loss: 1.0946 - val_acc: 0.5230
+Epoch 42/100
+2539/2539 [==============================] - 6s 2ms/step - loss: 0.6715 - acc: 0.7129 - val_loss: 1.0286 - val_acc: 0.5230
+Epoch 43/100
+2539/2539 [==============================] - 6s 2ms/step - loss: 0.6510 - acc: 0.7109 - val_loss: 1.1628 - val_acc: 0.5760
+Epoch 44/100
+2539/2539 [==============================] - 6s 2ms/step - loss: 0.6425 - acc: 0.7318 - val_loss: 1.0734 - val_acc: 0.5689
+Epoch 45/100
+2539/2539 [==============================] - 6s 2ms/step - loss: 0.6206 - acc: 0.7479 - val_loss: 1.1072 - val_acc: 0.5972
+Epoch 46/100
+2539/2539 [==============================] - 7s 3ms/step - loss: 0.6275 - acc: 0.7468 - val_loss: 1.0124 - val_acc: 0.5724
+Epoch 47/100
+2539/2539 [==============================] - 6s 2ms/step - loss: 0.6230 - acc: 0.7523 - val_loss: 1.1541 - val_acc: 0.5512
+Epoch 48/100
+2539/2539 [==============================] - 6s 2ms/step - loss: 0.6040 - acc: 0.7621 - val_loss: 1.0298 - val_acc: 0.6007
+Epoch 49/100
+2539/2539 [==============================] - 6s 2ms/step - loss: 0.5981 - acc: 0.7727 - val_loss: 1.2038 - val_acc: 0.6007
+Epoch 50/100
+2539/2539 [==============================] - 6s 2ms/step - loss: 0.5850 - acc: 0.7783 - val_loss: 1.2115 - val_acc: 0.5265
+Epoch 51/100
+2539/2539 [==============================] - 6s 2ms/step - loss: 0.5951 - acc: 0.7818 - val_loss: 1.1943 - val_acc: 0.5724
+Epoch 52/100
+2539/2539 [==============================] - 6s 2ms/step - loss: 0.5954 - acc: 0.7767 - val_loss: 1.3447 - val_acc: 0.5618
+Epoch 53/100
+2539/2539 [==============================] - 6s 2ms/step - loss: 0.5998 - acc: 0.7751 - val_loss: 1.2038 - val_acc: 0.5477
+Epoch 54/100
+2539/2539 [==============================] - 6s 2ms/step - loss: 0.5919 - acc: 0.7822 - val_loss: 1.3855 - val_acc: 0.4982
+Epoch 55/100
+2539/2539 [==============================] - 6s 2ms/step - loss: 0.5901 - acc: 0.7913 - val_loss: 1.4363 - val_acc: 0.5689
+Epoch 56/100
+2539/2539 [==============================] - 6s 2ms/step - loss: 0.6038 - acc: 0.7790 - val_loss: 1.2325 - val_acc: 0.5442
+Epoch 57/100
+2539/2539 [==============================] - 6s 2ms/step - loss: 0.5614 - acc: 0.8007 - val_loss: 1.1938 - val_acc: 0.5901
+Epoch 58/100
+2539/2539 [==============================] - 6s 2ms/step - loss: 0.5434 - acc: 0.8216 - val_loss: 1.2069 - val_acc: 0.6078
+Epoch 59/100
+2539/2539 [==============================] - 6s 2ms/step - loss: 0.5728 - acc: 0.8046 - val_loss: 1.3313 - val_acc: 0.6254
+Epoch 60/100
+2539/2539 [==============================] - 6s 2ms/step - loss: 0.5439 - acc: 0.8153 - val_loss: 1.1288 - val_acc: 0.6184
+Epoch 61/100
+2539/2539 [==============================] - 6s 2ms/step - loss: 0.5096 - acc: 0.8456 - val_loss: 1.3941 - val_acc: 0.5795
+Epoch 62/100
+2539/2539 [==============================] - 6s 2ms/step - loss: 0.5141 - acc: 0.8338 - val_loss: 1.4812 - val_acc: 0.5724
+Epoch 63/100
+2539/2539 [==============================] - 6s 2ms/step - loss: 0.5810 - acc: 0.8141 - val_loss: 1.3979 - val_acc: 0.5618
+Epoch 64/100
+2539/2539 [==============================] - 6s 2ms/step - loss: 0.5525 - acc: 0.8169 - val_loss: 1.6588 - val_acc: 0.5230
+Epoch 65/100
+2539/2539 [==============================] - 6s 2ms/step - loss: 0.5239 - acc: 0.8350 - val_loss: 1.2371 - val_acc: 0.5972
+Epoch 66/100
+2539/2539 [==============================] - 6s 2ms/step - loss: 0.4894 - acc: 0.8570 - val_loss: 1.4023 - val_acc: 0.5654
+Epoch 67/100
+2539/2539 [==============================] - 6s 2ms/step - loss: 0.5359 - acc: 0.8373 - val_loss: 1.3584 - val_acc: 0.6078
+Epoch 68/100
+2539/2539 [==============================] - 6s 2ms/step - loss: 0.5479 - acc: 0.8291 - val_loss: 1.3290 - val_acc: 0.5795
+Epoch 69/100
+2539/2539 [==============================] - 6s 2ms/step - loss: 0.4689 - acc: 0.8610 - val_loss: 1.3836 - val_acc: 0.5724
+Epoch 70/100
+2539/2539 [==============================] - 6s 2ms/step - loss: 0.5114 - acc: 0.8503 - val_loss: 1.4429 - val_acc: 0.5830
+Epoch 71/100
+2539/2539 [==============================] - 6s 2ms/step - loss: 0.4853 - acc: 0.8653 - val_loss: 1.5661 - val_acc: 0.5936
+Epoch 72/100
+2539/2539 [==============================] - 6s 2ms/step - loss: 0.5218 - acc: 0.8417 - val_loss: 1.3685 - val_acc: 0.5795
+Epoch 73/100
+2539/2539 [==============================] - 6s 2ms/step - loss: 0.4824 - acc: 0.8645 - val_loss: 1.6428 - val_acc: 0.5689
+Epoch 74/100
+2539/2539 [==============================] - 6s 2ms/step - loss: 0.4857 - acc: 0.8649 - val_loss: 1.8371 - val_acc: 0.5512
+Epoch 75/100
+2539/2539 [==============================] - 6s 2ms/step - loss: 0.4893 - acc: 0.8625 - val_loss: 1.6201 - val_acc: 0.5406
+Epoch 76/100
+2539/2539 [==============================] - 6s 2ms/step - loss: 0.4780 - acc: 0.8700 - val_loss: 1.5227 - val_acc: 0.5724
+Epoch 77/100
+2539/2539 [==============================] - 6s 2ms/step - loss: 0.4660 - acc: 0.8637 - val_loss: 1.5443 - val_acc: 0.5830
+Epoch 78/100
+2539/2539 [==============================] - 6s 2ms/step - loss: 0.4865 - acc: 0.8751 - val_loss: 1.5264 - val_acc: 0.5795
+Epoch 79/100
+2539/2539 [==============================] - 6s 2ms/step - loss: 0.4973 - acc: 0.8610 - val_loss: 1.6940 - val_acc: 0.5972
+Epoch 80/100
+2539/2539 [==============================] - 6s 2ms/step - loss: 0.4830 - acc: 0.8688 - val_loss: 1.8104 - val_acc: 0.5053
+Epoch 81/100
+2539/2539 [==============================] - 6s 2ms/step - loss: 0.4740 - acc: 0.8708 - val_loss: 1.5240 - val_acc: 0.5795
+Epoch 82/100
+2539/2539 [==============================] - 6s 2ms/step - loss: 0.4605 - acc: 0.8842 - val_loss: 2.0803 - val_acc: 0.5724
+Epoch 83/100
+2539/2539 [==============================] - 6s 2ms/step - loss: 0.4524 - acc: 0.8822 - val_loss: 1.8918 - val_acc: 0.5795
+Epoch 84/100
+2539/2539 [==============================] - 6s 2ms/step - loss: 0.4455 - acc: 0.8878 - val_loss: 1.6433 - val_acc: 0.5901
+Epoch 85/100
+2539/2539 [==============================] - 6s 2ms/step - loss: 0.4643 - acc: 0.8822 - val_loss: 1.7845 - val_acc: 0.5477
+Epoch 86/100
+2539/2539 [==============================] - 6s 2ms/step - loss: 0.4945 - acc: 0.8728 - val_loss: 1.8654 - val_acc: 0.5866
+Epoch 87/100
+2539/2539 [==============================] - 6s 2ms/step - loss: 0.4593 - acc: 0.8818 - val_loss: 1.7341 - val_acc: 0.5760
+Epoch 88/100
+2539/2539 [==============================] - 6s 2ms/step - loss: 0.4477 - acc: 0.8905 - val_loss: 1.7695 - val_acc: 0.5512
+Epoch 89/100
+2539/2539 [==============================] - 6s 2ms/step - loss: 0.4608 - acc: 0.8870 - val_loss: 1.9568 - val_acc: 0.5300
+Epoch 90/100
+2539/2539 [==============================] - 6s 2ms/step - loss: 0.4625 - acc: 0.8874 - val_loss: 1.9319 - val_acc: 0.5972
+Epoch 91/100
+2539/2539 [==============================] - 6s 2ms/step - loss: 0.4628 - acc: 0.8842 - val_loss: 1.7320 - val_acc: 0.5442
+Epoch 92/100
+2539/2539 [==============================] - 6s 2ms/step - loss: 0.4800 - acc: 0.8728 - val_loss: 2.0030 - val_acc: 0.5371
+Epoch 93/100
+2539/2539 [==============================] - 6s 2ms/step - loss: 0.4755 - acc: 0.8803 - val_loss: 1.6763 - val_acc: 0.5618
+Epoch 94/100
+2539/2539 [==============================] - 7s 3ms/step - loss: 0.4250 - acc: 0.8984 - val_loss: 1.7661 - val_acc: 0.5689
+Epoch 95/100
+2539/2539 [==============================] - 7s 3ms/step - loss: 0.4142 - acc: 0.9059 - val_loss: 1.6594 - val_acc: 0.5972
+Epoch 96/100
+2539/2539 [==============================] - 6s 2ms/step - loss: 0.4242 - acc: 0.8960 - val_loss: 2.4071 - val_acc: 0.5512
+Epoch 97/100
+2539/2539 [==============================] - 6s 2ms/step - loss: 0.4312 - acc: 0.8909 - val_loss: 1.8955 - val_acc: 0.5689
+Epoch 98/100
+2539/2539 [==============================] - 6s 2ms/step - loss: 0.4129 - acc: 0.9023 - val_loss: 1.6437 - val_acc: 0.5442
+Epoch 99/100
+2539/2539 [==============================] - 6s 2ms/step - loss: 0.3906 - acc: 0.9118 - val_loss: 1.6887 - val_acc: 0.5830
+Epoch 100/100
+2539/2539 [==============================] - 6s 2ms/step - loss: 0.3991 - acc: 0.9110 - val_loss: 1.5488 - val_acc: 0.5936
+dict_keys(['val_loss', 'val_acc', 'loss', 'acc'])
