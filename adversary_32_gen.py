@@ -1,5 +1,5 @@
 # the file is to write a adversary model based on image data generator
-# the dataset used is the manually classified face64
+# the dataset used is the manually classified face32
 
 import numpy as np
 import glob
@@ -70,7 +70,7 @@ model = Sequential([
     Dense(2, activation='softmax')
 ])
 
-# model.load_weights("adversary_gen_overall_32.h5")
+model.load_weights("adversary_gen_overall_32.h5")
 
 sgd = optimizers.SGD(lr=0.01, momentum=0.9, nesterov=True)
 model.compile(loss='binary_crossentropy', optimizer=sgd, metrics=['acc'])
@@ -87,9 +87,9 @@ callbacks = [
 
 history = model.fit_generator(
     train_generator,
-    # update based on change in batch size
-    steps_per_epoch=3571 // 32,
-    validation_steps=3571 // 32,
+    # # update based on change in batch size
+    # steps_per_epoch=3571 // 32,
+    # validation_steps=3571 // 32,
     epochs=30,
     validation_data=validation_generator,
     callbacks=callbacks)
