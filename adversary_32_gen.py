@@ -12,7 +12,7 @@ from keras import regularizers, optimizers
 from keras.callbacks import EarlyStopping, ModelCheckpoint
 import matplotlib.pyplot as plt
 
-base_path = "face32/image"
+base_path = "face32_gen/image_gender"
 
 train_datagen = ImageDataGenerator(
     rescale=1. / 255,
