@@ -1,5 +1,5 @@
 # the file is to write a adversary model based on image data generator
-# the dataset used is the manually classified face32
+# the dataset used is the manually classified face32_gen/image_gender
 
 import numpy as np
 import glob
