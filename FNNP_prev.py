@@ -12,7 +12,7 @@ from keras.callbacks import EarlyStopping, ModelCheckpoint
 from keras.optimizers import SGD, Adam
 from keras import backend as K
 
-base_path = "../dataset/GENKI-4K/"
+base_path = "face32_relabeled/"
 
 # def load_data():
 #     train_datagen = ImageDataGenerator(rescale=1. / 255, validation_split=0.2)
@@ -37,13 +37,13 @@ base_path = "../dataset/GENKI-4K/"
 
 
 def read_data():
-    handle1 = open(base_path + "gender_labels_for_4K.txt", "r")
-    handle2 = open(base_path + "smile_or_no_for_4K_updated.txt", "r")
+    handle1 = open(base_path + "gender.txt", "r")
+    handle2 = open(base_path + "smile.txt", "r")
 
     raw_gender_label = []
     for line in handle1:
         line = line.strip()
-        if line == "man" or line == "woman":
+        if line == "0" or line == "1":
             raw_gender_label.append(line)
         else:
             print(line)
@@ -66,7 +66,7 @@ def read_data():
     x_train, Y_gender, Y_smile = [], [], []
     # supposed to be 1164 in the end, merely a counter for check
     broken_series = 0
-    for i in range(1, 3986 + 1):
+    for i in range(1, 2723 + 1):
         image_name = base_path + "image/" + str(i) + ".jpg"
         try:
             image = Image.open(image_name)
@@ -79,7 +79,7 @@ def read_data():
         image_smile_label = raw_smile_label[i - 1]
         # print(image_gender_label, image_smile_label)
         raw_data = np.asarray(image, dtype="int32")
-        data = np.reshape(raw_data, (4096, ))
+        data = np.reshape(raw_data, (1024, ))
         x_train.append(data)
         Y_gender.append([image_gender_label == 'man', image_gender_label == 'woman'])
         Y_smile.append([image_smile_label == '1', image_smile_label == '0'])
@@ -100,7 +100,7 @@ mu, sigma = 0, 0.1
 X_data_raw = np.copy(X_data)
 
 X_data = np.asarray([
-    np.append(np.reshape(X, (4096, 1)), np.random.normal(mu, sigma, 100))
+    np.append(np.reshape(X, (1024, 1)), np.random.normal(mu, sigma, 100))
     for X in X_data
 ])
 
@@ -123,15 +123,15 @@ X_test_raw = X_data_raw[train_num:]
 print(X_train.shape)
 
 privatizer = Sequential([
-    Dense(4096, input_shape=(4196,)),
+    Dense(1124, input_shape=(1124,)),
     keras.layers.LeakyReLU(alpha=0.3),
-    Dense(4096),
+    Dense(1024),
     keras.layers.LeakyReLU(alpha=0.3),
-    Dense(4096),
+    Dense(1024),
     keras.layers.LeakyReLU(alpha=0.3),
-    Dense(4096),
+    Dense(1024),
     keras.layers.LeakyReLU(alpha=0.3),
-    Reshape((64, 64, 1)),
+    Reshape((32, 32, 1)),
 ])
 # privatizer.compile(loss="categorical_crossentropy", optimizer="sgd")
 
@@ -158,7 +158,7 @@ gender_classifier = Sequential([
         padding='same',
         activation='relu',
         # set reading mode to get "grayscale"
-        input_shape=(64, 64, 1)),
+        input_shape=(32, 32, 1)),
     BatchNormalization(),
     # # remove additional layer coming from imagination
     # Conv2D(filters=64, kernel_size=3, padding='same', activation='relu'),
