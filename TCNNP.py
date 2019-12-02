@@ -1,14 +1,15 @@
-# this file is to write FNNP based GAN using dataset based on text label
-# FNNP: feedforward neural network privatizer
+# this file is to write TCNNP based GAN using dataset based on text label
+# TCNNP: transposed convolution neural network privatizer
 
 import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
 from PIL import Image
+import tensorflow as tf
 from keras import models, regularizers, optimizers, backend as K
 from keras.callbacks import EarlyStopping, ModelCheckpoint
 from keras.layers import Conv2D, Flatten, MaxPooling2D, Dense, BatchNormalization
-from keras.layers import concatenate, Input, Reshape, LeakyReLU
+from keras.layers import concatenate, Input, Reshape, LeakyReLU, Conv2DTranspose
 from keras.models import Sequential, Model, load_model
 from keras.optimizers import SGD, Adam
 from keras.preprocessing.image import ImageDataGenerator, load_img, img_to_array, array_to_img
@@ -66,13 +67,7 @@ def read_data():
 
 X_data_raw, Y_gender, Y_smile = read_data()
 
-# concatenate random noise to images
-# TODO: should the size of random noise be increased accordingly?
-mu, sigma = 0, 0.1
-X_data = np.asarray([
-    np.append(np.reshape(X, (1024, 1)), np.random.normal(mu, sigma, 100))
-    for X in X_data_raw
-])
+X_data = X_data_raw.copy()
 
 # split into train and test subsets
 validation_split = 0.1
@@ -91,28 +86,40 @@ X_train_raw = X_data_raw[:train_num]
 X_test_raw = X_data_raw[train_num:]
 
 # privatizer initialization
+
 privatizer = Sequential([
-    Dense(1124, input_shape=(1124, )),
-    LeakyReLU(alpha=0.3),
-    Dense(1024),
-    LeakyReLU(alpha=0.3),
-    Dense(1024),
-    LeakyReLU(alpha=0.3),
-    Dense(1024),
-    LeakyReLU(alpha=0.3),
-    Reshape((32, 32, 1), input_shape=(1024,))
+    Conv2DTranspose(filters=128,
+                    kernel_size=(3, 3),
+                    strides=2,
+                    input_shape=(4, 4, 256), activation="relu"),
+    BatchNormalization(),
+    Conv2DTranspose(filters=1,
+                    kernel_size=(3, 3),
+                    strides=2,
+                    activation="tanh"),
+    BatchNormalization()
 ])
-privatizer.inputs = X_train
 
 # # supposed to load weights saved
 # privatizer.load_weights("privatizer_overall.h5")
-
 for item in privatizer.layers:
     item.trainable = False
 
-# privatizer.compile(optimizer=SGD(lr=0.1, momentum=0.9),
-#                    loss=["categorical_crossentropy"])
-# privatizer.summary()
+privatizer.compile(optimizer=SGD(lr=0.1, momentum=0.9),
+                   loss=["categorical_crossentropy"])
+privatizer.summary()
+
+# define a method to concantenate privatizer result to original image
+def concantenate_privatized_vector(privatizer, X_image_data):
+    # supposed to linear project (100,1) gaussian random noise
+    # but since there are pre-built random noise generator in tf
+    # generate random feature tensor 4, 4, 256
+    random_noise = tf.random.normal((4, 4, 256), mean=0.0, stddev=0.1)
+    return np.asarray(
+        np.append(image, np.asarray(privatizer.predict(random_noise)))
+        for image in X_image_data
+    )
+
 
 # pre-trained adversary model
 adversary = Sequential([
@@ -136,10 +143,7 @@ adversary = Sequential([
     Flatten(),
     Dense(2, activation='softmax')
 ])
-
-# ######## Load weights for pre-trained asdversary model
-# adversary.load_weights("adversary_gen_overall_32.h5")
-
+adversary.load_weights("adversary_gen_overall_32.h5")
 adversary.trainable = False
 adversary.compile(loss=['categorical_crossentropy'],
                   optimizer=SGD(lr=0.01, momentum=0.9), metrics=['acc'])
