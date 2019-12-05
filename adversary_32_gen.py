@@ -1,8 +1,11 @@
 # the file is to write a adversary model based on image data generator
 # the dataset used is the manually classified face32_gen/image_gender
 
+# by evaluation file "adversary_32_gen_check.py":
+# the overall.h5: 0.5767562406904557, 0.8511029411764706 (validation)
+# the checkpoint.h5py: 0.5590784207862967, 0.8639705882352942 (validation)
+
 import numpy as np
-import glob
 import os
 import random
 from keras.preprocessing.image import ImageDataGenerator, load_img, img_to_array, array_to_img
