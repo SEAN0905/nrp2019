@@ -64,6 +64,62 @@ def read_data():
 # # [[False, True], [False, True], [False, True], [False, True], [False, True]]
     return np.asarray(X_train), np.asarray(Y_gender), np.asarray(Y_smile)
 
+def build_asversary():
+    # pre-trained adversary model
+    adversary = Sequential([
+        Conv2D(
+            filters=32,
+            kernel_size=(3, 3),
+            padding='same',
+            activation='relu',
+            input_shape=(32, 32, 1)),
+        BatchNormalization(),
+        MaxPooling2D(pool_size=(2, 2)),
+        Conv2D(filters=64, kernel_size=(3, 3), padding='same', activation='relu'),
+        BatchNormalization(),
+        MaxPooling2D(pool_size=(2, 2)),
+        Dense(1024, kernel_initializer='random_uniform',
+            activation='relu', kernel_regularizer=regularizers.l2(0.00001)),
+        BatchNormalization(),
+        Dense(1024, kernel_initializer='random_uniform',
+            activation='relu', kernel_regularizer=regularizers.l2(0.00001)),
+        BatchNormalization(),
+        Flatten(),
+        Dense(2, activation='softmax')
+    ])
+    adversary.load_weights("adversary_gen_overall_32.h5")
+    adversary.trainable = False
+    adversary.compile(loss=['categorical_crossentropy'],
+                    optimizer=SGD(lr=0.01, momentum=0.9), metrics=['acc'])
+    return adversary
+
+adversary = build_asversary()
+
+def build_privatizer():
+    # privatizer initialization
+    privatizer = Sequential([
+        Conv2DTranspose(filters=128,
+                        kernel_size=(3, 3),
+                        strides=2,
+                        input_shape=(4, 4, 256), activation="relu"),
+        BatchNormalization(),
+        Conv2DTranspose(filters=1,
+                        kernel_size=(3, 3),
+                        strides=2,
+                        activation="tanh"),
+        BatchNormalization()
+    ])
+    # # supposed to load weights saved
+    # privatizer.load_weights("privatizer_overall.h5")
+    for item in privatizer.layers:
+        item.trainable = False
+
+    privatizer.compile(optimizer=SGD(lr=0.1, momentum=0.9),
+                    loss=["categorical_crossentropy"])
+    privatizer.summary()
+    return privatizer
+
+privatizer = build_privatizer()
 
 X_data_raw, Y_gender, Y_smile = read_data()
 
@@ -85,30 +141,6 @@ y_smile_test = Y_smile[train_num:]
 X_train_raw = X_data_raw[:train_num]
 X_test_raw = X_data_raw[train_num:]
 
-# privatizer initialization
-
-privatizer = Sequential([
-    Conv2DTranspose(filters=128,
-                    kernel_size=(3, 3),
-                    strides=2,
-                    input_shape=(4, 4, 256), activation="relu"),
-    BatchNormalization(),
-    Conv2DTranspose(filters=1,
-                    kernel_size=(3, 3),
-                    strides=2,
-                    activation="tanh"),
-    BatchNormalization()
-])
-
-# # supposed to load weights saved
-# privatizer.load_weights("privatizer_overall.h5")
-for item in privatizer.layers:
-    item.trainable = False
-
-privatizer.compile(optimizer=SGD(lr=0.1, momentum=0.9),
-                   loss=["categorical_crossentropy"])
-privatizer.summary()
-
 # define a method to concantenate privatizer result to original image
 def concantenate_privatized_vector(privatizer, X_image_data):
     # supposed to linear project (100,1) gaussian random noise
@@ -119,34 +151,6 @@ def concantenate_privatized_vector(privatizer, X_image_data):
         np.append(image, np.asarray(privatizer.predict(random_noise)))
         for image in X_image_data
     )
-
-
-# pre-trained adversary model
-adversary = Sequential([
-    Conv2D(
-        filters=32,
-        kernel_size=(3, 3),
-        padding='same',
-        activation='relu',
-        input_shape=(32, 32, 1)),
-    BatchNormalization(),
-    MaxPooling2D(pool_size=(2, 2)),
-    Conv2D(filters=64, kernel_size=(3, 3), padding='same', activation='relu'),
-    BatchNormalization(),
-    MaxPooling2D(pool_size=(2, 2)),
-    Dense(1024, kernel_initializer='random_uniform',
-          activation='relu', kernel_regularizer=regularizers.l2(0.00001)),
-    BatchNormalization(),
-    Dense(1024, kernel_initializer='random_uniform',
-          activation='relu', kernel_regularizer=regularizers.l2(0.00001)),
-    BatchNormalization(),
-    Flatten(),
-    Dense(2, activation='softmax')
-])
-adversary.load_weights("adversary_gen_overall_32.h5")
-adversary.trainable = False
-adversary.compile(loss=['categorical_crossentropy'],
-                  optimizer=SGD(lr=0.01, momentum=0.9), metrics=['acc'])
 
 # combine privatizer and adversary to have GAP
 GAP = Model(
