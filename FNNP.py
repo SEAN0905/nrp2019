@@ -104,14 +104,14 @@ privatizer = Sequential([
 ])
 privatizer.inputs = X_train
 
-# # supposed to load weights saved
-# privatizer.load_weights("privatizer_overall.h5")
+# # # supposed to load weights saved
+# # privatizer.load_weights("privatizer_overall.h5")
 
 for item in privatizer.layers:
     item.trainable = False
 
 # privatizer.compile(optimizer=SGD(lr=0.1, momentum=0.9),
-#                    loss=["categorical_crossentropy"])
+#                    loss=["categorical_crossentropy"], metrics=['acc'])
 # privatizer.summary()
 
 # pre-trained adversary model
@@ -137,8 +137,8 @@ adversary = Sequential([
     Dense(2, activation='softmax')
 ])
 
-# ######## Load weights for pre-trained asdversary model
-# adversary.load_weights("adversary_gen_overall_32.h5")
+# Load weights for pre-trained asdversary model
+adversary.load_weights("adversary_gen_overall_32.h5")
 
 adversary.trainable = False
 adversary.compile(loss=['categorical_crossentropy'],
@@ -150,20 +150,22 @@ GAP = Model(
     output=[adversary(privatizer.output), privatizer.layers[-2].output])
 GAP.summary()
 
-
 def X_loss(y_true, y_predicted):
     return K.mean(K.square(y_true - y_predicted) / (255.0 * 255.0))
 
 
 n_epoch = 30
-lr = 0.001
+## to be tuned depends on decreasing speed of loss value
+lr = 0.01
 
-num_iter = 10
+## to be updated based on the need
+num_iter = 1
 
 N_layer_p = len(privatizer.layers)
 
 while True:
-    loss_x = 1
+    ## to be tuned
+    loss_x = 0.1
     # loss_x = float(input("Input the penalty parameter:\n"))
 
     # train the privatizer model and set adversary to be untrainable
