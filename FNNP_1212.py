@@ -25,13 +25,12 @@ class GAP():
         self.channels = 1
         self.img_shape = (self.img_rows, self.img_cols, self.channels)
 
-        # load raw data
-        self.X_data_raw, self.Y_gender_raw, Y_smile_raw = self.read_data()
+        optimizer = SGD(lr=0.01, momentum=0.9)
 
         # build discriminator
         self.discriminator =  self.build_discriminator()
         self.discriminator.compile(loss="categorical_crossentropy",
-                optimizer=SGD(lr=0.01, momentum=0.9),
+                optimizer=optimizer,
                 metrics=['accuracy'])
         # for the combined model only discriminator will be trained
         self.discriminator.trainable = False
@@ -39,6 +38,20 @@ class GAP():
         # build generator
         self.generator = self.build_generator()
 
+        # to sepcify the input and output of the GAP
+        z = Input(shape=(self.img_shape))
+        img_prv = self.generator(z)
+        clasif_res = self.discriminator(img_prv)
+
+        # TODO:to be tuned
+        # the weight of the adversary loss
+        loss_x = 0.1
+
+        self.combined = Model(z, clasif_res)
+        self.combined.compile(optimizer=optimizer, loss=["categorical_crossentropy", self.X_loss], loss_weights=[1, loss_x])
+
+    def X_loss(self, y_true, y_pred):
+        return K.mean(K.square(y_true - y_pred) / (255.0 * 255.0))
 
     def read_data(self):
         # gender.txt: 0 for woman, 1 for man
@@ -147,3 +160,8 @@ class GAP():
         clasify_res = model(img_prv)
 
         return Model(img_prv, clasify_res)
+    
+    def train(self, epochs, batch_size=64, sample_interval=50):
+        # load raw data
+        self.X_data_raw, self.Y_gender_raw, Y_smile_raw = self.read_data()
+
