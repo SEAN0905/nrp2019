@@ -163,5 +163,40 @@ class GAP():
     
     def train(self, epochs, batch_size=64, sample_interval=50):
         # load raw data
-        self.X_data_raw, self.Y_gender_raw, Y_smile_raw = self.read_data()
+        X_data_raw, Y_gender_raw, Y_smile_raw = self.read_data()
+
+        for epoch in range(epochs):
+
+            # ---------------------
+            #  Train Discriminator
+            # --------------------
+
+            # select random batch of images
+            ids = np.random.randint(0, X_data_raw[0], batch_size)
+            imgs = X_data_raw[ids]
+            gender_label =  Y_gender_raw[ids]
+            smile_label = Y_smile_raw[ids]
+
+            # generate random noise and concatenate to sampled images
+            mu, sigma = 0, 0.1
+            img_cons = np.asarray([
+                np.append(np.reshape(X, (1024, 1)), np.random.normal(mu, sigma, 100))
+                for X in imgs
+            ])
+
+            # generate privatized images
+            prv_imgs = self.generator.predict(img_cons)
+
+            # TODO: find an appropriate value for p
+            #  set penalty coefficient
+            p = 0.3
+
+            # train the discriminator
+            d_loss_prv = self.discriminator.train_on_batch(prv_imgs, gender_label)
+            d_loss_act = self.discriminator.train_on_batch(imgs, gender_label)
+            d_loss = p * np.add(d_loss_prv, d_loss_act)
+
+            
+
+
 
