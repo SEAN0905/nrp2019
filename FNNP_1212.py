@@ -225,13 +225,12 @@ class GAP():
             # generate privatized images
             prv_imgs = self.generator.predict(img_cons)
 
-            # TODO: find an appropriate value for p
-            #  set penalty coefficient
-            p = 0.3
-
             # train the discriminator
             d_loss_prv = self.discriminator.train_on_batch(prv_imgs, gender_label)
             # print(d_loss_prv)
+
+            # update penalty coefficient
+            self.penalty_coef = epoch * 0.01
             
             # ---------------------
             #  Train Generator
