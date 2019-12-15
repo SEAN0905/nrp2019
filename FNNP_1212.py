@@ -237,15 +237,16 @@ class GAP():
             gender_label =  Y_gender_raw[ids]
             smile_label = Y_smile_raw[ids]
 
-            # generate random noise and concatenate to sampled images
-            mu, sigma = 0, 0.1
-            img_cons = np.asarray([
-                np.append(np.reshape(X, (1024, 1)), np.random.normal(mu, sigma, 100))
-                for X in imgs
-            ])
+            # # generate random noise and concatenate to sampled images
+            # mu, sigma = 0, 0.1
+            # img_cons = np.asarray([
+            #     np.append(np.reshape(X, (1024, 1)), np.random.normal(mu, sigma, 100))
+            #     for X in imgs
+            # ])
 
             # generate privatized images
-            prv_imgs = self.generator.predict(img_cons)
+            # prv_imgs = self.generator.predict(img_cons)
+            prv_imgs = self.generator.predict(imgs)
 
             # train the discriminator
             d_loss_prv = self.discriminator.train_on_batch(prv_imgs, gender_label)
@@ -257,7 +258,7 @@ class GAP():
             # ---------------------
             #  Train Generator
             # ---------------------
-            g_loss = self.combined.train_on_batch(img_cons, (imgs, gender_label))
+            g_loss = self.combined.train_on_batch(imgs, (imgs, gender_label))
             print("Epoch {0:3} [D loss: {1:20}, acc.: {2:8}%] [G loss: {3:20}]".format(epoch, d_loss_prv[0], 100*d_loss_prv[1], g_loss))
 
 
