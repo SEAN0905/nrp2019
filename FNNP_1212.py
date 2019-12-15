@@ -172,10 +172,12 @@ class GAP():
 
         mu, sigma = 0, 0.1
 
-        img_raw = tf.map_fn(fn=lambda x:np.append(x, np.random.normal(mu, sigma, 100)), elems=img_input)
-
+        # img_raw = tf.map_fn(lambda x:np.append(x, np.random.normal(mu, sigma, 100)), img_input)
+        img_raw = tf.map_fn(lambda x:K.concatenate([x, tf.random.normal((100, ), mu, sigma)]), img_input)
+        print(type(img_raw), img_raw)
         # img_raw = model_concat(img_input)
         img_prv = model(img_raw)
+        print(type(img_prv), img_prv)
 
         return Model(img_input, img_prv)
 
@@ -255,7 +257,7 @@ class GAP():
             # ---------------------
             #  Train Generator
             # ---------------------
-            g_loss = self.combined.train_on_batch(img_cons, gender_label)
+            g_loss = self.combined.train_on_batch(img_cons, (imgs, gender_label))
             print("Epoch {0:3} [D loss: {1:20}, acc.: {2:8}%] [G loss: {3:20}]".format(epoch, d_loss_prv[0], 100*d_loss_prv[1], g_loss))
 
 
