@@ -7,10 +7,11 @@
 import numpy as np
 import matplotlib.pyplot as plt
 from PIL import Image
+import tensorflow as tf
 from keras import models, regularizers, optimizers, backend as K
 from keras.callbacks import EarlyStopping, ModelCheckpoint
 from keras.layers import Conv2D, Flatten, MaxPooling2D, Dense, BatchNormalization
-from keras.layers import concatenate, Input, Reshape, LeakyReLU
+from keras.layers import concatenate, Input, Reshape, LeakyReLU, Lambda
 from keras.models import Sequential, Model, load_model
 from keras.optimizers import SGD, Adam
 
@@ -27,21 +28,21 @@ class GAP():
 
         optimizer = SGD(lr=0.01, momentum=0.9)
 
+        # build generator
+        self.generator = self.build_generator()
+
         # build discriminator
         self.discriminator = self.build_discriminator()
         self.discriminator.compile(loss="categorical_crossentropy",
                 optimizer=optimizer,
                 metrics=['accuracy'])
 
-        # build generator
-        self.generator = self.build_generator()
-
-        # to sepcify the input and output of the GAP
-        z = Input(shape=(1124, ))
-        img_prv = self.generator(z)
-
         # for the combined model only discriminator will be trained
         self.discriminator.trainable = False
+
+        # to sepcify the input and output of the GAP
+        z = Input(shape=(1024, ))
+        img_prv = self.generator(z)
 
         clasif_res = self.discriminator(img_prv)
 
@@ -55,14 +56,9 @@ class GAP():
         # distortion to limit change to original image
         self.distortion = 0.1
 
-        # the model yielf two results: img_prv and clasif_res
-        # but with only one output
-        self.combined = Model(z, clasif_res)
-        self.combined.compile(optimizer=optimizer, loss=self.privatizer_loss, loss_weights=[self.loss_x])
-
-    # TODO: CHECK wrong loss function?
-    def X_loss(self, y_true, y_pred):
-        return K.mean(K.square(y_true - y_pred))
+        # the model yield two results: img_prv and clasif_res
+        self.combined = Model(z, (img_prv, clasif_res))
+        self.combined.compile(optimizer=optimizer, loss=[self.privatizer_loss, "categorical_loss"], loss_weights=[1, self.loss_x])
     
     def privatizer_loss(self, y_true, y_pred, eps=1e-15):
         # Prepare numpy array data
@@ -133,10 +129,30 @@ class GAP():
         # # [[False, True], [False, True], [False, True], [False, True], [False, True]]
         return np.asarray(X_train), np.asarray(Y_gender), np.asarray(Y_smile)
 
+    def concatenate(self, X_raw):
+        # print(X_raw.shape)
+
+        # set parameter for random noise vector
+        mu, sigma = 0, 0.1
+        
+        random_noise = np.random.normal(mu, sigma, (X_raw.shape[0], 100))
+
+        print(X_raw.shape)
+        print(random_noise.shape)
+        # X_processed = tf.map_fn(fn=lambda x:np.append(x, random_noise), elems=X_raw)
+
+        # return Model(X_raw, X_processed)
+        return K.concatenate([X_raw, random_noise], axis=1)
+
+    
     def build_generator(self):
         # the function to initialize a privatizer(generator)
         # input: image concatenated with random noise vector
         # output: privatized image
+
+        model_concat = Sequential([
+            Lambda(self.concatenate, output_shape=(1124, ))
+        ])
 
         model = Sequential([
             Dense(1124, input_shape=(1124, )),
@@ -152,8 +168,14 @@ class GAP():
 
         model.summary()
 
-        img_input = Input(shape=(1124, ))
-        img_prv = model(img_input)
+        img_input = Input(shape=(1024, ))
+
+        mu, sigma = 0, 0.1
+
+        img_raw = tf.map_fn(fn=lambda x:np.append(x, np.random.normal(mu, sigma, 100)), elems=img_input)
+
+        # img_raw = model_concat(img_input)
+        img_prv = model(img_raw)
 
         return Model(img_input, img_prv)
 
@@ -191,8 +213,6 @@ class GAP():
 
         img_prv = Input(shape=self.img_shape)
         clasify_res = model(img_prv)
-
-
 
         return Model(img_prv, clasify_res)
     
