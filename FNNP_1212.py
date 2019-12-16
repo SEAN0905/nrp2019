@@ -8,10 +8,11 @@ import numpy as np
 import matplotlib.pyplot as plt
 from PIL import Image
 import tensorflow as tf
+import keras
 from keras import models, regularizers, optimizers, backend as K
 from keras.callbacks import EarlyStopping, ModelCheckpoint
 from keras.layers import Conv2D, Flatten, MaxPooling2D, Dense, BatchNormalization
-from keras.layers import concatenate, Input, Reshape, LeakyReLU, Lambda, Concatenate
+from keras.layers import concatenate, Input, Reshape, LeakyReLU, Lambda, Concatenate, GaussianNoise
 from keras.models import Sequential, Model, load_model
 from keras.optimizers import SGD, Adam
 
@@ -153,37 +154,76 @@ class GAP():
 
         mu, sigma = 0, 0.1
 
-        random_noise = tf.random.normal((100, 1), mu, sigma)
+        # random_noise = tf.random.normal((100, 1), mu, sigma)
+        
+        # def img_cat(x_raw):
+        #     return tf.map_fn(lambda x: K.concatenate(
+        #         [x, tf.random.normal((100, 1), mu, sigma)], axis=0), x_raw)
 
-        model = Sequential([
-            Dense(1124, input_shape=(1124, )),
-            LeakyReLU(alpha=0.3),
-            Dense(1024),
-            LeakyReLU(alpha=0.3),
-            Dense(1024),
-            LeakyReLU(alpha=0.3),
-            Dense(1024),
-            LeakyReLU(alpha=0.3),
-            Reshape((32, 32, 1), input_shape=(1024,))
-        ])
+        # def _cat(x_raw):
+        #     return np.asarray(np.append(x, np.random.normal(mu, sigma, (100, 1))) for x in x_raw)
 
-        model.summary()
+        # model = Sequential([
+        #     # Lambda(img_cat, input_shape=(1024, 1)),
+        #     # Concatenate([Input(shape=(1024, 1)), np.random.normal(mu, sigma, (100, 1))], input_shape=(1024, 1)),
+        #     Dense(1, input_shape=(1124, 1)),
+        #     Dense(1124),
+        #     LeakyReLU(alpha=0.3),
+        #     Dense(1024),
+        #     LeakyReLU(alpha=0.3),
+        #     Dense(1024),
+        #     LeakyReLU(alpha=0.3),
+        #     Dense(1024, activation=LeakyReLU(alpha=0.3)),
+        #     Dense(1),
+        #     Reshape((32, 32, 1), input_shape=(1024, 1))
+        # ])
+
+        # model.summary()
 
         img_input = Input(shape=(1024, 1))
-
-        mu, sigma = 0, 0.1
-
+        img_input_dense = Dense(1, activation="relu")(img_input)
         '''
         the following part of the function contains the bug regarding use of tensor
         the code aims to concatenate the random noise to the image input
         '''
+
+        img_cat = tf.map_fn(lambda x: K.concatenate(
+            [x, tf.random.normal((100, 1), mu, sigma)], axis=0), img_input)
+        
+        noise = tf.random.normal((100, 1), mu, sigma)
+        noise_dense = Dense(1, )(noise)
+
+        # noise_dense = GaussianNoise(sigma, input_shape=(100, ))
+
+
+        # img_cat = Concatenate()([img_input_dense, noise_dense])
+
+        # img_cat = tf.map_fn(lambda x: K.concatenate([x, noise_dense], axis=0), img_input_dense)
+        img_cat = Lambda(tf.map_fn(lambda x: K.concatenate([x, noise_dense], axis=0), img_input_dense), output_shape=(1124, 1))(img_input_dense)
+        # model.add(Lambda(lambda x: max(0., min(x,100.)), output_shape=(1,)))
+
+        # print(img_cat.shape)
+        # # (?, 1124, 1)
+
+        receiver = Flatten()(img_cat)
+        dense1 = Dense(1024, activation=LeakyReLU())(receiver)
+        dense2 = Dense(1024, activation=LeakyReLU())(dense1)
+        dense3 = Dense(1024, activation=LeakyReLU())(dense2)
+        dense4 = Dense(1024, activation=LeakyReLU())(dense3)
+        print("dense4: ", dense4)
+        img_prv = Reshape((32, 32, 1), input_shape=(1024, ))(dense4)
+        print("img_prv", img_prv)
+
+
+        # img_cat = Lambda(_cat, output_shape=(1124, 1)).output
+        # img_cat = Concatenate([img_input, tf.random.normal((100, 1), mu, sigma)], input_shape=(1024, 1))
+        #  img_cat = model2(img_input)
         # img_raw = tf.map_fn(lambda x: K.concatenate(
         #     [x, tf.random.normal((100, ), mu, sigma)]), img_input)
 
-        img_raw = Concatenate([img_input, tf.random.normal((100, 1), mu, sigma)])
-        # print(type(img_raw), img_raw)
-        img_prv = model(img_raw.output)
-        # print(type(img_prv), img_prv)
+        # img_prv = K.reshape(model(img_input), (32, 32, 1))
+        # img_prv = model(img_cat)
+        # img_prv_rshp = K.reshape(K.expand_dims(img_prv), (32, 32, 1))
 
         return Model(img_input, img_prv)
 
