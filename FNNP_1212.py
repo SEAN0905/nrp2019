@@ -129,20 +129,20 @@ class GAP():
         # # [[False, True], [False, True], [False, True], [False, True], [False, True]]
         return np.asarray(X_train), np.asarray(Y_gender), np.asarray(Y_smile)
 
-    def concatenate(self, X_raw):
-        # print(X_raw.shape)
+    # def concatenate(self, X_raw):
+    #     # print(X_raw.shape)
 
-        # set parameter for random noise vector
-        mu, sigma = 0, 0.1
+    #     # set parameter for random noise vector
+    #     mu, sigma = 0, 0.1
         
-        random_noise = np.random.normal(mu, sigma, (X_raw.shape[0], 100))
+    #     random_noise = np.random.normal(mu, sigma, (X_raw.shape[0], 100))
 
-        print(X_raw.shape)
-        print(random_noise.shape)
-        # X_processed = tf.map_fn(fn=lambda x:np.append(x, random_noise), elems=X_raw)
+    #     print(X_raw.shape)
+    #     print(random_noise.shape)
+    #     # X_processed = tf.map_fn(fn=lambda x:np.append(x, random_noise), elems=X_raw)
 
-        # return Model(X_raw, X_processed)
-        return K.concatenate([X_raw, random_noise], axis=1)
+    #     # return Model(X_raw, X_processed)
+    #     return K.concatenate([X_raw, random_noise], axis=1)
 
     
     def build_generator(self):
@@ -150,9 +150,9 @@ class GAP():
         # input: image concatenated with random noise vector
         # output: privatized image
 
-        model_concat = Sequential([
-            Lambda(self.concatenate, output_shape=(1124, ))
-        ])
+        # model_concat = Sequential([
+        #     Lambda(self.concatenate, output_shape=(1124, ))
+        # ])
 
         model = Sequential([
             Dense(1124, input_shape=(1124, )),
