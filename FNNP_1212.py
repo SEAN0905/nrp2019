@@ -42,7 +42,7 @@ class GAP():
         self.discriminator.trainable = False
 
         # to sepcify the input and output of the GAP
-        z = Input(shape=(1024, ))
+        z = Input(shape=(1024, 1))
         img_prv = self.generator(z)
 
         clasif_res = self.discriminator(img_prv)
@@ -60,7 +60,7 @@ class GAP():
         # the model yield two results: img_prv and clasif_res
         self.combined = Model(z, (img_prv, clasif_res))
         self.combined.compile(optimizer=optimizer, loss=[
-                              self.privatizer_loss, "categorical_loss"], loss_weights=[1, self.loss_x])
+                              self.privatizer_loss, "categorical_crossentropy"], loss_weights=[1, self.loss_x])
 
     def privatizer_loss(self, y_true, y_pred, eps=1e-15):
         # Prepare numpy array data
@@ -132,37 +132,24 @@ class GAP():
         # # [[False, True], [False, True], [False, True], [False, True], [False, True]]
         return np.asarray(X_train), np.asarray(Y_gender), np.asarray(Y_smile)
 
-    # def concatenate(self, X_raw):
-    #     # print(X_raw.shape)
-
-    #     # set parameter for random noise vector
-    #     mu, sigma = 0, 0.1
-
-    #     random_noise = np.random.normal(mu, sigma, (X_raw.shape[0], 100))
-
-    #     print(X_raw.shape)
-    #     print(random_noise.shape)
-    #     # X_processed = tf.map_fn(fn=lambda x:np.append(x, random_noise), elems=X_raw)
-
-    #     # return Model(X_raw, X_processed)
-    #     return K.concatenate([X_raw, random_noise], axis=1)
-
     def build_generator(self):
         # the function to initialize a privatizer(generator)
-        # input: image concatenated with random noise vector
+        # input: raw image
         # output: privatized image
 
         img_input = Input(shape=(1024, 1))
-        img_input_dense = Dense(1, activation="relu")(img_input)
+        img_input_dense = Dense(1)(img_input)
 
         mu, sigma = 0, 0.1
         noise = tf.random.normal((100, 1), mu, sigma)
-        noise_dense = Dense(1, )(noise)
+        noise_dense = Dense(1)(noise)
 
-        # TODO: to find a way to concatenate to each image separately while stil
-        # within the Lambda layer
-        img_cat = Lambda(tf.map_fn(lambda x: K.concatenate(
-            [x, noise_dense], axis=0), img_input_dense), output_shape=(1124, 1))(img_input_dense)
+        def _cat(X_raw):
+            return tf.map_fn(lambda x:K.concatenate([x, noise_dense], axis=0), X_raw)
+        
+        img_cat = Lambda(lambda x: _cat(x), output_shape=(1124, 1))(img_input_dense)
+        # print("img_cat", img_cat)
+        # # (?, 1124, 1)
 
         receiver = Flatten()(img_cat)
         dense1 = Dense(1024, activation=LeakyReLU())(receiver)
