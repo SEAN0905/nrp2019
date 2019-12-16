@@ -11,7 +11,7 @@ import tensorflow as tf
 from keras import models, regularizers, optimizers, backend as K
 from keras.callbacks import EarlyStopping, ModelCheckpoint
 from keras.layers import Conv2D, Flatten, MaxPooling2D, Dense, BatchNormalization
-from keras.layers import concatenate, Input, Reshape, LeakyReLU, Lambda
+from keras.layers import concatenate, Input, Reshape, LeakyReLU, Lambda, Concatenate
 from keras.models import Sequential, Model, load_model
 from keras.optimizers import SGD, Adam
 
@@ -34,8 +34,8 @@ class GAP():
         # build discriminator
         self.discriminator = self.build_discriminator()
         self.discriminator.compile(loss="categorical_crossentropy",
-                optimizer=optimizer,
-                metrics=['accuracy'])
+                                   optimizer=optimizer,
+                                   metrics=['accuracy'])
 
         # for the combined model only discriminator will be trained
         self.discriminator.trainable = False
@@ -58,8 +58,9 @@ class GAP():
 
         # the model yield two results: img_prv and clasif_res
         self.combined = Model(z, (img_prv, clasif_res))
-        self.combined.compile(optimizer=optimizer, loss=[self.privatizer_loss, "categorical_loss"], loss_weights=[1, self.loss_x])
-    
+        self.combined.compile(optimizer=optimizer, loss=[
+                              self.privatizer_loss, "categorical_loss"], loss_weights=[1, self.loss_x])
+
     def privatizer_loss(self, y_true, y_pred, eps=1e-15):
         # Prepare numpy array data
         y_true = np.array(y_true)
@@ -71,12 +72,13 @@ class GAP():
         loss = np.sum(- y_true * np.log(p) - (1 - y_true) * np.log(1-p))
 
         log_loss = loss / len(y_true)
-        
+
         # penalty term
         # TODO: CHECK the loss function in paper suggests the distortion to x rather than y
         # so here, instead of y_true, y_pred, should be x, y_pred?
         # but how to show that then?
-        distortion_punishment = self.penalty_coef * max(0, np.mean((np.square(y_true - y_pred) - self.distortion)))
+        distortion_punishment = self.penalty_coef * \
+            max(0, np.mean((np.square(y_true - y_pred) - self.distortion)))
 
         return log_loss + distortion_punishment
 
@@ -134,7 +136,7 @@ class GAP():
 
     #     # set parameter for random noise vector
     #     mu, sigma = 0, 0.1
-        
+
     #     random_noise = np.random.normal(mu, sigma, (X_raw.shape[0], 100))
 
     #     print(X_raw.shape)
@@ -144,15 +146,14 @@ class GAP():
     #     # return Model(X_raw, X_processed)
     #     return K.concatenate([X_raw, random_noise], axis=1)
 
-    
     def build_generator(self):
         # the function to initialize a privatizer(generator)
         # input: image concatenated with random noise vector
         # output: privatized image
 
-        # model_concat = Sequential([
-        #     Lambda(self.concatenate, output_shape=(1124, ))
-        # ])
+        mu, sigma = 0, 0.1
+
+        random_noise = tf.random.normal((100, 1), mu, sigma)
 
         model = Sequential([
             Dense(1124, input_shape=(1124, )),
@@ -168,16 +169,21 @@ class GAP():
 
         model.summary()
 
-        img_input = Input(shape=(1024, ))
+        img_input = Input(shape=(1024, 1))
 
         mu, sigma = 0, 0.1
 
-        # img_raw = tf.map_fn(lambda x:np.append(x, np.random.normal(mu, sigma, 100)), img_input)
-        img_raw = tf.map_fn(lambda x:K.concatenate([x, tf.random.normal((100, ), mu, sigma)]), img_input)
-        print(type(img_raw), img_raw)
-        # img_raw = model_concat(img_input)
-        img_prv = model(img_raw)
-        print(type(img_prv), img_prv)
+        '''
+        the following part of the function contains the bug regarding use of tensor
+        the code aims to concatenate the random noise to the image input
+        '''
+        # img_raw = tf.map_fn(lambda x: K.concatenate(
+        #     [x, tf.random.normal((100, ), mu, sigma)]), img_input)
+
+        img_raw = Concatenate([img_input, tf.random.normal((100, 1), mu, sigma)])
+        # print(type(img_raw), img_raw)
+        img_prv = model(img_raw.output)
+        # print(type(img_prv), img_prv)
 
         return Model(img_input, img_prv)
 
@@ -217,7 +223,7 @@ class GAP():
         clasify_res = model(img_prv)
 
         return Model(img_prv, clasify_res)
-    
+
     def train(self, epochs, batch_size=64, sample_interval=50):
         # load raw data
         X_data_raw, Y_gender_raw, Y_smile_raw = self.read_data()
@@ -234,7 +240,7 @@ class GAP():
             # select random batch of images
             ids = np.random.randint(0, 2723-1, batch_size)
             imgs = X_data_raw[ids]
-            gender_label =  Y_gender_raw[ids]
+            gender_label = Y_gender_raw[ids]
             smile_label = Y_smile_raw[ids]
 
             # # generate random noise and concatenate to sampled images
@@ -249,24 +255,21 @@ class GAP():
             prv_imgs = self.generator.predict(imgs)
 
             # train the discriminator
-            d_loss_prv = self.discriminator.train_on_batch(prv_imgs, gender_label)
+            d_loss_prv = self.discriminator.train_on_batch(
+                prv_imgs, gender_label)
             # print(d_loss_prv)
 
             # update penalty coefficient
             self.penalty_coef = epoch * 0.01
-            
+
             # ---------------------
             #  Train Generator
             # ---------------------
             g_loss = self.combined.train_on_batch(imgs, (imgs, gender_label))
-            print("Epoch {0:3} [D loss: {1:20}, acc.: {2:8}%] [G loss: {3:20}]".format(epoch, d_loss_prv[0], 100*d_loss_prv[1], g_loss))
+            print("Epoch {0:3} [D loss: {1:20}, acc.: {2:8}%] [G loss: {3:20}]".format(
+                epoch, d_loss_prv[0], 100*d_loss_prv[1], g_loss))
 
 
 if __name__ == "__main__":
     gap = GAP()
     gap.train(epochs=20)
-
-            
-
-
-
