@@ -58,30 +58,33 @@ class GAP():
         self.distortion = 0.1
 
         # the model yield two results: img_prv and clasif_res
-        self.combined = Model(z, (img_prv, clasif_res))
-        self.combined.compile(optimizer=optimizer, loss=[
-                              self.privatizer_loss, "categorical_crossentropy"], loss_weights=[1, self.loss_x])
+        self.combined = Model(z, [img_prv, clasif_res])
+        # TODO:self.privatizer_loss has a bug
+        self.combined.compile(optimizer=optimizer, loss=[self.privatizer_loss(), "categorical_crossentropy"])
 
-    def privatizer_loss(self, y_true, y_pred, eps=1e-15):
-        # Prepare numpy array data
-        y_true = np.array(y_true)
-        y_pred = np.array(y_pred)
-        assert (len(y_true) and len(y_true) == len(y_pred))
+    def privatizer_loss(self, y_true, y_pred):
+        
+        # standard procedure with numpy as inputy
+        def _log_loss(input_tensors, eps=1e-15):
+            # unpack input tensors
+            _y_true, _y_pred = input_tensors
+            # Prepare numpy array data
+            _y_true = np.array(_y_true)
+            # print(y_true.shape)
+            _y_pred = np.array(_y_pred)
+            # print(y_pred.shape)
 
-        # Clip y_pred between eps and 1-eps
-        p = np.clip(y_pred, eps, 1-eps)
-        loss = np.sum(- y_true * np.log(p) - (1 - y_true) * np.log(1-p))
+            # clip the y_pred
+            p = np.clip(_y_pred, eps, 1-eps)
+            loss = np.sum(- _y_true * np.log(p) - (1 - _y_true) * np.log(1-p))
 
-        log_loss = loss / len(y_true)
+            log_loss = loss / len(_y_true)
 
-        # penalty term
-        # TODO: CHECK the loss function in paper suggests the distortion to x rather than y
-        # so here, instead of y_true, y_pred, should be x, y_pred?
-        # but how to show that then?
-        distortion_punishment = self.penalty_coef * \
-            max(0, np.mean((np.square(y_true - y_pred) - self.distortion)))
-
-        return log_loss + distortion_punishment
+            distortion_punishment = self.penalty_coef * max(0, np.mean(np.square(_y_true - _y_pred) - self.distortion))
+            return log_loss + distortion_punishment
+        
+        # wrap python function as an operation in tensorflow graph
+        return tf.py_func(_log_loss, [y_true, y_pred], tf.float32)
 
     def read_data(self):
         # gender.txt: 0 for woman, 1 for man
@@ -145,9 +148,10 @@ class GAP():
         noise_dense = Dense(1)(noise)
 
         def _cat(X_raw):
-            return tf.map_fn(lambda x:K.concatenate([x, noise_dense], axis=0), X_raw)
-        
-        img_cat = Lambda(lambda x: _cat(x), output_shape=(1124, 1))(img_input_dense)
+            return tf.map_fn(lambda x: K.concatenate([x, noise_dense], axis=0), X_raw)
+
+        img_cat = Lambda(lambda x: _cat(
+            x), output_shape=(1124, 1))(img_input_dense)
         # print("img_cat", img_cat)
         # # (?, 1124, 1)
 
