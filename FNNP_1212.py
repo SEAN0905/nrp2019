@@ -18,6 +18,37 @@ from keras.optimizers import SGD, Adam
 
 dataset_path = "face32_relabeled/"
 
+# set global variables
+global penalty_coef
+global distortion
+# set penalty term for privatizer loss function
+penalty_coef = 0.01
+# distortion to limit change to original image
+distortion = 0.1
+
+
+def privatizer_loss(y_true, y_pred):
+    # standard procedure with numpy as inputy
+    def _log_loss(input_tensors, eps=1e-15):
+        # unpack input tensors
+        _y_true, _y_pred = input_tensors
+        # Prepare numpy array data
+        _y_true = np.array(_y_true)
+        # print(y_true.shape)
+        _y_pred = np.array(_y_pred)
+        # print(y_pred.shape)
+
+        # clip the y_pred
+        p = np.clip(_y_pred, eps, 1-eps)
+        loss = np.sum(- _y_true * np.log(p) - (1 - _y_true) * np.log(1-p))
+        log_loss = loss / len(_y_true)
+
+        distortion_punishment = penalty_coef * max(0, np.mean(np.square(_y_true - _y_pred) - distortion))
+        return log_loss + distortion_punishment
+        
+    # wrap python function as an operation in tensorflow graph
+    return tf.numpy_function(_log_loss, [y_true, y_pred], tf.float32)
+
 
 class GAP():
     def __init__(self):
@@ -51,40 +82,12 @@ class GAP():
         # the weight of the adversary loss
         self.loss_x = 0.1
 
-        # set penalty term for privatizer loss function
-        self.penalty_coef = 0.01
-
-        # distortion to limit change to original image
-        self.distortion = 0.1
-
         # the model yield two results: img_prv and clasif_res
         self.combined = Model(z, [img_prv, clasif_res])
         # TODO:self.privatizer_loss has a bug
-        self.combined.compile(optimizer=optimizer, loss=[self.privatizer_loss(), "categorical_crossentropy"])
-
-    def privatizer_loss(self, y_true, y_pred):
-        
-        # standard procedure with numpy as inputy
-        def _log_loss(input_tensors, eps=1e-15):
-            # unpack input tensors
-            _y_true, _y_pred = input_tensors
-            # Prepare numpy array data
-            _y_true = np.array(_y_true)
-            # print(y_true.shape)
-            _y_pred = np.array(_y_pred)
-            # print(y_pred.shape)
-
-            # clip the y_pred
-            p = np.clip(_y_pred, eps, 1-eps)
-            loss = np.sum(- _y_true * np.log(p) - (1 - _y_true) * np.log(1-p))
-
-            log_loss = loss / len(_y_true)
-
-            distortion_punishment = self.penalty_coef * max(0, np.mean(np.square(_y_true - _y_pred) - self.distortion))
-            return log_loss + distortion_punishment
-        
-        # wrap python function as an operation in tensorflow graph
-        return tf.py_func(_log_loss, [y_true, y_pred], tf.float32)
+        loss_function = [privatizer_loss, "categorical_crossentropy"]
+        # print(K.ndim(loss_function))
+        self.combined.compile(optimizer=optimizer, loss=[privatizer_loss, "categorical_crossentropy"], loss_weights=[1, self.loss_x])
 
     def read_data(self):
         # gender.txt: 0 for woman, 1 for man
@@ -241,7 +244,7 @@ class GAP():
             # print(d_loss_prv)
 
             # update penalty coefficient
-            self.penalty_coef = epoch * 0.01
+            penalty_coef = epoch * 0.01
 
             # ---------------------
             #  Train Generator
