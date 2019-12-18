@@ -84,8 +84,9 @@ class GAP():
 
         # the model yield two results: img_prv and clasif_res
         self.combined = Model(z, [img_prv, clasif_res])
-        # TODO:self.privatizer_loss has a bug
-        loss_function = [privatizer_loss, "categorical_crossentropy"]
+        
+        # TODO: there is a NoneType cannot be interpreted 
+        # loss_function = [privatizer_loss, "categorical_crossentropy"]
         # print(K.ndim(loss_function))
         self.combined.compile(optimizer=optimizer, loss=[privatizer_loss, "categorical_crossentropy"], loss_weights=[1, self.loss_x])
 
