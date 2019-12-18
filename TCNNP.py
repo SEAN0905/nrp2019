@@ -202,7 +202,7 @@ class GAP():
 
             # generate privatized images
             # prv_imgs = self.generator.predict(img_cons)
-            prv_imgs = tf.add(self.generator.predict(tf.random.normal((4, 4, 256), mu, sigma)), imgs)
+            prv_imgs = tf.add(self.generator.predict(tf.random.normal((4, 4, 256), self.mu, self.sigma)), imgs)
 
             # train the discriminator
             d_loss_prv = self.discriminator.train_on_batch(
