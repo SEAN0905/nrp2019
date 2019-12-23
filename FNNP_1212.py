@@ -59,7 +59,7 @@ class GAP():
         self.discriminator.trainable = False
 
         # to sepcify the input and output of the GAP
-        z = Input(shape=(1024, 1))
+        z = Input(shape=(32, 32, 1))
         img_prv = self.generator(z)
 
         clasif_res = self.discriminator(img_prv)
@@ -130,8 +130,9 @@ class GAP():
         # input: raw image
         # output: privatized image
 
-        img_input = Input(shape=(1024, 1))
-        img_input_dense = Dense(1)(img_input)
+        img_input = Input(shape=(32, 32, 1))
+        img_input_reshape = Reshape((1024, 1))(img_input)
+        img_input_dense = Dense(1)(img_input_reshape)
 
         mu, sigma = 0, 0.1
         noise = tf.random.normal((100, 1), mu, sigma)
@@ -235,8 +236,12 @@ class GAP():
             # ---------------------
             #  Train Generator
             # ---------------------
-            g_loss = self.combined.train_on_batch(imgs, (imgs, gender_label))
-            print("Epoch {0:3} [D loss: {1:20}, acc.: {2:8}%] [G loss: {3:20}]".format(
+            g_loss = self.combined.train_on_batch(imgs, [imgs, gender_label])
+            print("epoch:", epoch)
+            print("d loss", d_loss_prv[0], d_loss_prv[1])
+            print("g loss", g_loss)
+
+            print("Epoch {0:3} [D loss: {1:10}, acc.: {2:8}%] [G loss: {3:10}]".format(
                 epoch, d_loss_prv[0], 100*d_loss_prv[1], g_loss))
 
 
