@@ -56,6 +56,7 @@ class GAP():
 
         # parameter for random noise
         self.mu, self.sigma = 0, 0.1
+        # TODO: find proper way for linear projection
         noise = tf.random.normal((4, 4, 256), self.mu, self.sigma)
 
         self.generator = self.build_generator()

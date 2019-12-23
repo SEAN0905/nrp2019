@@ -28,26 +28,12 @@ distortion = 0.1
 
 
 def privatizer_loss(y_true, y_pred):
-    # standard procedure with numpy as inputy
-    def _log_loss(input_tensors, eps=1e-15):
-        # unpack input tensors
-        _y_true, _y_pred = input_tensors
-        # Prepare numpy array data
-        _y_true = np.array(_y_true)
-        # print(y_true.shape)
-        _y_pred = np.array(_y_pred)
-        # print(y_pred.shape)
-
-        # clip the y_pred
-        p = np.clip(_y_pred, eps, 1-eps)
-        loss = np.sum(- _y_true * np.log(p) - (1 - _y_true) * np.log(1-p))
-        log_loss = loss / len(_y_true)
-
-        distortion_punishment = penalty_coef * max(0, np.mean(np.square(_y_true - _y_pred) - distortion))
-        return log_loss + distortion_punishment
-        
-    # wrap python function as an operation in tensorflow graph
-    return tf.numpy_function(_log_loss, [y_true, y_pred], tf.float32)
+    # privatizer loss function, punish as epoch increase (update otherwhere)
+    log_loss_result = tf.compat.v1.losses.log_loss(y_true, y_pred)
+    print(log_loss_result)
+    distortion_punishment = tf.scalar_mul(penalty_coef, K.maximum(tf.constant(0.0), K.mean(K.square(y_true - y_pred))))
+    print(distortion_punishment)
+    return tf.add(log_loss_result, distortion_punishment)
 
 
 class GAP():
@@ -84,7 +70,7 @@ class GAP():
 
         # the model yield two results: img_prv and clasif_res
         self.combined = Model(z, [img_prv, clasif_res])
-        
+
         # TODO: there is a NoneType cannot be interpreted 
         # loss_function = [privatizer_loss, "categorical_crossentropy"]
         # print(K.ndim(loss_function))
@@ -127,7 +113,7 @@ class GAP():
             image_gender_label = raw_gender_label[i-1]
             image_smile_label = raw_smile_label[i-1]
             raw_image = np.asarray(image, dtype="int32")
-            data = np.reshape(raw_image, (1024, ))
+            data = np.reshape(raw_image, (32, 32, 1))
             X_train.append(data)
             Y_gender.append([image_gender_label == "0",
                              image_gender_label == "1"])
@@ -182,8 +168,7 @@ class GAP():
                 filters=32,
                 kernel_size=(3, 3),
                 padding='same',
-                activation='relu',
-                input_shape=(32, 32, 1)),
+                activation='relu', input_shape=(32, 32, 1)),
             BatchNormalization(),
             MaxPooling2D(pool_size=(2, 2)),
             Conv2D(filters=64, kernel_size=(3, 3),
@@ -225,6 +210,7 @@ class GAP():
             # select random batch of images
             ids = np.random.randint(0, 2723-1, batch_size)
             imgs = X_data_raw[ids]
+            print(imgs.shape)
             gender_label = Y_gender_raw[ids]
             smile_label = Y_smile_raw[ids]
 
@@ -236,7 +222,6 @@ class GAP():
             # ])
 
             # generate privatized images
-            # prv_imgs = self.generator.predict(img_cons)
             prv_imgs = self.generator.predict(imgs)
 
             # train the discriminator
