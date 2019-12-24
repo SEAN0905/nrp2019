@@ -24,15 +24,15 @@ global distortion
 # set penalty term for privatizer loss function
 penalty_coef = 0.01
 # distortion to limit change to original image
-distortion = 0.1
+distortion = 0.01
 
 
 def privatizer_loss(y_true, y_pred):
     # privatizer loss function, punish as epoch increase (update otherwhere)
-    log_loss_result = tf.compat.v1.losses.log_loss(y_true, y_pred)
-    print(log_loss_result)
-    distortion_punishment = tf.scalar_mul(penalty_coef, K.maximum(tf.constant(0.0), K.mean(K.square(y_true - y_pred))))
-    print(distortion_punishment)
+    log_loss_result = keras.losses.categorical_crossentropy(y_true, y_pred)
+    # print(log_loss_result)
+    distortion_punishment = tf.scalar_mul(penalty_coef, K.maximum(tf.constant(0.0), tf.math.subtract(K.mean(K.square(y_true - y_pred)), tf.constant(distortion))))
+    # print(distortion_punishment)
     return tf.add(log_loss_result, distortion_punishment)
 
 
@@ -240,9 +240,9 @@ class GAP():
             print("epoch:", epoch)
             print("d loss", d_loss_prv[0], d_loss_prv[1])
             print("g loss", g_loss)
-
-            print("Epoch {0:3} [D loss: {1:10}, acc.: {2:8}%] [G loss: {3:10}]".format(
-                epoch, d_loss_prv[0], 100*d_loss_prv[1], g_loss))
+            # TODO: g_loss yield extremely large values, to debug
+            print("Epoch {0:3} [D loss: {1:10}, acc.: {2:8}%] [G loss: {3:10}; {4:10}; {5:10}]".format(
+                epoch, d_loss_prv[0], 100*d_loss_prv[1], g_loss[0], g_loss[1], g_loss[2]))
 
 
 if __name__ == "__main__":
