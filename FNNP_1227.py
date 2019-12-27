@@ -14,7 +14,7 @@ from keras.callbacks import EarlyStopping, ModelCheckpoint
 from keras.layers import Conv2D, Flatten, MaxPooling2D, Dense, BatchNormalization
 from keras.layers import concatenate, Input, Reshape, LeakyReLU, Lambda, Concatenate, GaussianNoise
 from keras.models import Sequential, Model, load_model
-from keras.optimizers import SGD, Adam
+from keras.optimizers import SGD
 
 dataset_path = "face32_relabeled/"
 
