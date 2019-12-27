@@ -8,15 +8,43 @@ import numpy as np
 import matplotlib.pyplot as plt
 from PIL import Image
 import tensorflow as tf
-import keras
 from keras import models, regularizers, optimizers, backend as K
 from keras.callbacks import EarlyStopping, ModelCheckpoint
 from keras.layers import Conv2D, Flatten, MaxPooling2D, Dense, BatchNormalization
 from keras.layers import concatenate, Input, Reshape, LeakyReLU, Lambda, Concatenate, GaussianNoise
+from keras.losses import categorical_crossentropy
 from keras.models import Sequential, Model, load_model
 from keras.optimizers import SGD
 
 dataset_path = "face32_relabeled/"
+
+'''
+Possible reasons of nan loss
+by https://stackoverflow.com/questions/40050397/deep-learning-nan-loss-reasons
+
+There are lots of things I have seen make a model diverge.
+
+1. Too high of a learning rate. You can often tell if this is the case if the loss begins to increase 
+and then diverges to infinity.
+
+2. I am not to familiar with the DNNClassifier but I am guessing it uses the categorical cross entropy cost function. 
+This involves taking the log of the prediction which diverges as the prediction approaches zero. 
+That is why people usually add a small epsilon value to the prediction to prevent this divergence. 
+I am guessing the DNNClassifier probably does this or uses the tensorflow opp for it. Probably not the issue.
+
+3. Other numerical stability issues can exist such as division by zero where adding the epsilon can help. 
+Another less obvious one if the square root who's derivative can diverge if not properly simplified 
+when dealing with finite precision numbers. Yet again I doubt this is the issue in the case of the DNNClassifier.
+
+4. You may have an issue with the input data. 
+Try calling assert not np.any(np.isnan(x)) on the input data to make sure you are not introducing the nan. 
+Also make sure all of the target values are valid. Finally, make sure the data is properly normalized. 
+You probably want to have the pixels in the range [-1, 1] and not [0, 255].
+
+5. The labels must be in the domain of the loss function, so if using a logarithmic-based loss function 
+all labels must be non-negative (as noted by evan pu and the comments below).
+
+'''
 
 # set global variables
 global penalty_coef
@@ -30,9 +58,10 @@ distortion = 0.01
 def privatizer_loss(y_true, y_pred):
     print("Privatizer loss function called")
     # privatizer loss function, punish as epoch increase (update otherwhere)
-    log_loss_result = keras.losses.categorical_crossentropy(y_true, y_pred)
+    log_loss_result = categorical_crossentropy(y_true, y_pred)
     # print(log_loss_result)
     distortion_punishment = tf.scalar_mul(penalty_coef, K.maximum(tf.constant(0.0), tf.math.subtract(K.mean(K.square(y_true - y_pred)), tf.constant(distortion))))
+    print(distortion)
     # print(distortion_punishment)
     return tf.add(log_loss_result, distortion_punishment)
 
@@ -45,7 +74,7 @@ class GAP():
         self.channels = 1
         self.img_shape = (self.img_rows, self.img_cols, self.channels)
 
-        optimizer = SGD(lr=0.01, momentum=0.9)
+        optimizer = SGD(lr=0.001, momentum=0.9)
 
         # build generator
         self.generator = self.build_generator()
@@ -133,7 +162,8 @@ class GAP():
 
         img_input = Input(shape=(32, 32, 1))
         img_input_reshape = Reshape((1024, 1))(img_input)
-        img_input_dense = Dense(1)(img_input_reshape)
+        img_input_reshape_n = BatchNormalization()(img_input_reshape)
+        img_input_dense = Dense(1)(img_input_reshape_n)
 
         mu, sigma = 0, 0.1
         noise = tf.random.normal((100, 1), mu, sigma)
@@ -152,9 +182,10 @@ class GAP():
         dense2 = Dense(1024, activation=LeakyReLU())(dense1)
         dense3 = Dense(1024, activation=LeakyReLU())(dense2)
         dense4 = Dense(1024, activation=LeakyReLU())(dense3)
+        dense4_n = BatchNormalization()(dense4)
         # print("dense4: ", dense4)
         # # (?, 1024)
-        img_prv = Reshape((32, 32, 1), input_shape=(1024, ))(dense4)
+        img_prv = Reshape((32, 32, 1), input_shape=(1024, ))(dense4_n)
         # print("img_prv", img_prv)
         # # (?, 32, 32, 1)
 
@@ -199,6 +230,8 @@ class GAP():
     def train(self, epochs, batch_size=64, sample_interval=50):
         # load raw data
         X_data_raw, Y_gender_raw, Y_smile_raw = self.read_data()
+
+        assert not np.any(np.isnan(X_data_raw))
 
         # print(X_data_raw.shape, Y_gender_raw.shape, Y_smile_raw.shape)
         # # (2723, 1024) (2723, 2) (2723, 2)
