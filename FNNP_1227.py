@@ -4,14 +4,17 @@
 
 # the dataset is face32_relabeled using text label
 
-# TODO: change input to two inputs: img, noise
-# TODO: update loss weights to become penalty coef
-# TODO: update privztier loss function
+import os
+os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'
 
 import numpy as np
 import matplotlib.pyplot as plt
 from PIL import Image
 import tensorflow as tf
+tf.get_logger().setLevel('INFO')
+import logging
+tf.get_logger().setLevel(logging.ERROR)
+
 from keras import models, regularizers, optimizers, backend as K
 from keras.callbacks import EarlyStopping, ModelCheckpoint
 from keras.layers import Conv2D, Flatten, MaxPooling2D, Dense, BatchNormalization, Activation
@@ -24,9 +27,13 @@ from keras.optimizers import SGD
 dataset_path = "face32_relabeled/"
 
 
+def pixel_mae_loss(y_true, y_pred):
+    return K.mean(K.abs(y_true - y_pred))
+
+
 class GAP():
     def __init__(self):
-        optimizer = SGD(lr=0.001, momentum=0.9)
+        self.optimizer = SGD(lr=0.01, momentum=0.9)
 
         # build generator
         self.generator = self.build_generator()
@@ -34,7 +41,7 @@ class GAP():
         # build discriminator
         self.discriminator = self.build_discriminator()
         self.discriminator.compile(loss="categorical_crossentropy",
-                                   optimizer=optimizer,
+                                   optimizer=self.optimizer,
                                    metrics=['accuracy'])
 
         # for the combined model only generator will be trained
@@ -44,21 +51,18 @@ class GAP():
         z = Input(shape=(32, 32, 1))
         noise = Input(shape=(100, 1))
         img_prv = self.generator([z, noise])
-
         clasif_res = self.discriminator(img_prv)
 
         # the weight of the adversary loss
-        # also the penalty coefficient
-        self.loss_x = 0.01
+        # also the penalty term
+        self.loss_x = 1
 
-        # the model yield two results: img_prv and clasif_res
+        # the model takes two input: img_raw(z) and noise
+        # yield two results: img_prv and clasif_res
         self.combined = Model([z, noise], [img_prv, clasif_res])
 
-        def pixel_mse_loss(y_true, y_pred):
-            return K.mean(K.square(y_true - y_pred))
-
-        self.combined.compile(optimizer=optimizer, loss=[
-                              pixel_mse_loss, "categorical_crossentropy"], loss_weights=[self.loss_x, 1])
+        self.combined.compile(optimizer=self.optimizer, loss=[
+                              pixel_mae_loss, "categorical_crossentropy"], loss_weights=[self.loss_x, 1])
 
     def read_data(self):
         # gender.txt: 0 for woman, 1 for man
@@ -176,7 +180,7 @@ class GAP():
             Dense(2, activation='softmax')
         ])
 
-        model.summary()
+        # model.summary()
 
         model.load_weights("adversary32.h5")
 
@@ -219,7 +223,9 @@ class GAP():
             # print(d_loss_prv)
 
             # update penalty coefficient
-            self.loss_x = epoch * 0.01
+            self.loss_x = epoch * 1
+            self.combined.compile(optimizer=self.optimizer, loss=[
+                                  pixel_mae_loss, "categorical_crossentropy"], loss_weights=[self.loss_x, 1])
 
             # ---------------------
             #  Train Generator
@@ -229,10 +235,10 @@ class GAP():
             # print("epoch:", epoch)
             # print("d loss", d_loss_prv[0], d_loss_prv[1])
             # print("g loss", g_loss)
-            print("Epoch {0:3} [D loss: {1:15}, acc.: {2:8}%] [G loss: {3:15}; {4:15}; {5:15}]".format(
+            print("Epoch %d [D loss: %.5f, acc. : %.3f %%] [G loss: pixel_mae_loss: %.5f; categorical_crossentropy: %.5f; combined: %.5f]" % (
                 epoch, d_loss_prv[0], 100*d_loss_prv[1], g_loss[0], g_loss[1], g_loss[2]))
 
 
 if __name__ == "__main__":
     gap = GAP()
-    gap.train(epochs=100)
+    gap.train(epochs=60)
