@@ -4,6 +4,10 @@
 
 # the dataset is face32_relabeled using text label
 
+# TODO: change input to two inputs: img, noise
+# TODO: update loss weights to become penalty coef
+# TODO: update privztier loss function
+
 import numpy as np
 import matplotlib.pyplot as plt
 from PIL import Image
@@ -17,54 +21,6 @@ from keras.models import Sequential, Model, load_model
 from keras.optimizers import SGD
 
 dataset_path = "face32_relabeled/"
-
-'''
-Possible reasons of nan loss
-by https://stackoverflow.com/questions/40050397/deep-learning-nan-loss-reasons
-
-There are lots of things I have seen make a model diverge.
-
-1. Too high of a learning rate. You can often tell if this is the case if the loss begins to increase 
-and then diverges to infinity.
-
-2. I am not to familiar with the DNNClassifier but I am guessing it uses the categorical cross entropy cost function. 
-This involves taking the log of the prediction which diverges as the prediction approaches zero. 
-That is why people usually add a small epsilon value to the prediction to prevent this divergence. 
-I am guessing the DNNClassifier probably does this or uses the tensorflow opp for it. Probably not the issue.
-
-3. Other numerical stability issues can exist such as division by zero where adding the epsilon can help. 
-Another less obvious one if the square root who's derivative can diverge if not properly simplified 
-when dealing with finite precision numbers. Yet again I doubt this is the issue in the case of the DNNClassifier.
-
-4. You may have an issue with the input data. 
-Try calling assert not np.any(np.isnan(x)) on the input data to make sure you are not introducing the nan. 
-Also make sure all of the target values are valid. Finally, make sure the data is properly normalized. 
-You probably want to have the pixels in the range [-1, 1] and not [0, 255].
-
-5. The labels must be in the domain of the loss function, so if using a logarithmic-based loss function 
-all labels must be non-negative (as noted by evan pu and the comments below).
-
-'''
-
-# set global variables
-global penalty_coef
-global distortion
-# set penalty term for privatizer loss function
-penalty_coef = 0.01
-# distortion to limit change to original image
-distortion = 0.01
-
-
-def privatizer_loss(y_true, y_pred):
-    print("Privatizer loss function called")
-    # privatizer loss function, punish as epoch increase (update otherwhere)
-    log_loss_result = categorical_crossentropy(y_true, y_pred)
-    # print(log_loss_result)
-    distortion_punishment = tf.scalar_mul(penalty_coef, K.maximum(tf.constant(0.0), tf.math.subtract(K.mean(K.square(y_true - y_pred)), tf.constant(distortion))))
-    print(distortion)
-    # print(distortion_punishment)
-    return tf.add(log_loss_result, distortion_punishment)
-
 
 class GAP():
     def __init__(self):
@@ -90,21 +46,22 @@ class GAP():
 
         # to sepcify the input and output of the GAP
         z = Input(shape=(32, 32, 1))
-        img_prv = self.generator(z)
+        noise = Input(shape=(100, 1))
+        img_prv = self.generator([z, noise])
 
         clasif_res = self.discriminator(img_prv)
 
-        # TODO:to be tuned
         # the weight of the adversary loss
+        # also the penalty coefficient
         self.loss_x = 0.1
 
         # the model yield two results: img_prv and clasif_res
-        self.combined = Model(z, [img_prv, clasif_res])
+        self.combined = Model([z, noise], [img_prv, clasif_res])
 
-        # TODO: there is a NoneType cannot be interpreted 
-        # loss_function = [privatizer_loss, "categorical_crossentropy"]
-        # print(K.ndim(loss_function))
-        self.combined.compile(optimizer=optimizer, loss=[privatizer_loss, "categorical_crossentropy"], loss_weights=[1, self.loss_x])
+        def pixel_mse_loss(y_true, y_pred):
+                return K.mean(K.square(y_true - y_pred))
+
+        self.combined.compile(optimizer=optimizer, loss=[pixel_mse_loss, "categorical_crossentropy"], loss_weights=[self.loss_x, 1])
 
     def read_data(self):
         # gender.txt: 0 for woman, 1 for man
@@ -165,15 +122,10 @@ class GAP():
         img_input_reshape_n = BatchNormalization()(img_input_reshape)
         img_input_dense = Dense(1)(img_input_reshape_n)
 
-        mu, sigma = 0, 0.1
-        noise = tf.random.normal((100, 1), mu, sigma)
+        
+        noise = Input(shape=(100, 1))
         noise_dense = Dense(1)(noise)
-
-        def _cat(X_raw):
-            return tf.map_fn(lambda x: K.concatenate([x, noise_dense], axis=0), X_raw)
-
-        img_cat = Lambda(lambda x: _cat(
-            x), output_shape=(1124, 1))(img_input_dense)
+        img_cat = Concatenate(axis=1)([img_input_dense, noise_dense])
         # print("img_cat", img_cat)
         # # (?, 1124, 1)
 
@@ -189,7 +141,7 @@ class GAP():
         # print("img_prv", img_prv)
         # # (?, 32, 32, 1)
 
-        return Model(img_input, img_prv)
+        return Model([img_input, noise], img_prv)
 
     def build_discriminator(self):
         # to initialize the pre-trained discriminator
@@ -238,45 +190,46 @@ class GAP():
 
         for epoch in range(epochs):
 
-            # ---------------------
-            #  Train Discriminator
-            # --------------------
+                # ---------------------
+                #  Train Discriminator
+                # --------------------
 
-            # select random batch of images
-            ids = np.random.randint(0, 2723-1, batch_size)
-            imgs = X_data_raw[ids]
-            # print(imgs.shape)
-            gender_label = Y_gender_raw[ids]
-            smile_label = Y_smile_raw[ids]
+                # select random batch of images
+                ids = np.random.randint(0, 2723-1, batch_size)
+                imgs = X_data_raw[ids]
+                # print(imgs.shape)
+                gender_label = Y_gender_raw[ids]
+                smile_label = Y_smile_raw[ids]
 
-            # # generate random noise and concatenate to sampled images
-            # mu, sigma = 0, 0.1
-            # img_cons = np.asarray([
-            #     np.append(np.reshape(X, (1024, 1)), np.random.normal(mu, sigma, 100))
-            #     for X in imgs
-            # ])
+                # # generate random noise and concatenate to sampled images
+                # mu, sigma = 0, 0.1
+                # img_cons = np.asarray([
+                #     np.append(np.reshape(X, (1024, 1)), np.random.normal(mu, sigma, 100))
+                #     for X in imgs
+                # ])
 
-            # generate privatized images
-            prv_imgs = self.generator.predict(imgs)
+                # generate privatized images
+                prv_imgs = self.generator.predict([imgs, np.random.normal(0, 1, (batch_size, 100, 1))])
 
-            # train the discriminator
-            d_loss_prv = self.discriminator.train_on_batch(
-                prv_imgs, gender_label)
-            # print(d_loss_prv)
+                # train the discriminator
+                d_loss_prv = self.discriminator.train_on_batch(
+                        prv_imgs, gender_label)
+                # print(d_loss_prv)
 
-            # update penalty coefficient
-            penalty_coef = epoch * 0.01
+                # update penalty coefficient
+                # penalty_coef = epoch * 0.01
+                self.loss_x = epoch * 0.1
 
-            # ---------------------
-            #  Train Generator
-            # ---------------------
-            g_loss = self.combined.train_on_batch(imgs, [imgs, gender_label])
-            # print("epoch:", epoch)
-            # print("d loss", d_loss_prv[0], d_loss_prv[1])
-            # print("g loss", g_loss)
-            # TODO: g_loss yield extremely large values, to debug
-            print("Epoch {0:3} [D loss: {1:10}, acc.: {2:8}%] [G loss: {3:10}; {4:10}; {5:10}]".format(
-                epoch, d_loss_prv[0], 100*d_loss_prv[1], g_loss[0], g_loss[1], g_loss[2]))
+                # ---------------------
+                #  Train Generator
+                # ---------------------
+                g_loss = self.combined.train_on_batch([imgs, np.random.normal(0, 1, (batch_size, 100, 1))], [imgs, gender_label])
+                # print("epoch:", epoch)
+                # print("d loss", d_loss_prv[0], d_loss_prv[1])
+                # print("g loss", g_loss)
+                # TODO: g_loss yield extremely large values, to debug
+                print("Epoch {0:3} [D loss: {1:10}, acc.: {2:8}%] [G loss: {3:10}; {4:10}; {5:10}]".format(
+                        epoch, d_loss_prv[0], 100*d_loss_prv[1], g_loss[0], g_loss[1], g_loss[2]))
 
 
 if __name__ == "__main__":
