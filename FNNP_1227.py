@@ -14,8 +14,9 @@ from PIL import Image
 import tensorflow as tf
 from keras import models, regularizers, optimizers, backend as K
 from keras.callbacks import EarlyStopping, ModelCheckpoint
-from keras.layers import Conv2D, Flatten, MaxPooling2D, Dense, BatchNormalization
+from keras.layers import Conv2D, Flatten, MaxPooling2D, Dense, BatchNormalization, Activation
 from keras.layers import concatenate, Input, Reshape, LeakyReLU, Lambda, Concatenate, GaussianNoise
+from keras.activations import tanh
 from keras.losses import categorical_crossentropy
 from keras.models import Sequential, Model, load_model
 from keras.optimizers import SGD
@@ -130,14 +131,19 @@ class GAP():
         # # (?, 1124, 1)
 
         receiver = Flatten()(img_cat)
-        dense1 = Dense(1024, activation=LeakyReLU())(receiver)
-        dense2 = Dense(1024, activation=LeakyReLU())(dense1)
-        dense3 = Dense(1024, activation=LeakyReLU())(dense2)
-        dense4 = Dense(1024, activation=LeakyReLU())(dense3)
-        dense4_n = BatchNormalization()(dense4)
+        dense1 = Dense(1024)(receiver)
+        dense1_a = LeakyReLU()(dense1)
+        dense2 = Dense(1024)(dense1_a)
+        dense2_a = LeakyReLU()(dense2)
+        dense3 = Dense(1024)(dense2_a)
+        dense3_a = LeakyReLU()(dense3)
+        dense4 = Dense(1024)(dense3_a)
+        dense4_a = Activation("tanh")(dense4)
+        # dense4_n = BatchNormalization()(dense4)
+        # final = 
         # print("dense4: ", dense4)
         # # (?, 1024)
-        img_prv = Reshape((32, 32, 1), input_shape=(1024, ))(dense4_n)
+        img_prv = Reshape((32, 32, 1), input_shape=(1024, ))(dense4_a)
         # print("img_prv", img_prv)
         # # (?, 32, 32, 1)
 
@@ -210,6 +216,7 @@ class GAP():
 
                 # generate privatized images
                 prv_imgs = self.generator.predict([imgs, np.random.normal(0, 1, (batch_size, 100, 1))])
+                print(prv_imgs[0][0])
 
                 # train the discriminator
                 d_loss_prv = self.discriminator.train_on_batch(
@@ -234,4 +241,4 @@ class GAP():
 
 if __name__ == "__main__":
     gap = GAP()
-    gap.train(epochs=20)
+    gap.train(epochs=50)
