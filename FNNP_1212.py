@@ -4,6 +4,10 @@
 
 # the dataset is face32_relabeled using text label
 
+# TODO: change input to two inputs: img, noise
+# TODO: update loss weights to become penalty coefficient
+# TODO: update privztier loss function
+
 import numpy as np
 import matplotlib.pyplot as plt
 from PIL import Image
