@@ -23,14 +23,9 @@ from keras.optimizers import SGD
 
 dataset_path = "face32_relabeled/"
 
+
 class GAP():
     def __init__(self):
-        # set image input basic information
-        self.img_rows = 32
-        self.img_cols = 32
-        self.channels = 1
-        self.img_shape = (self.img_rows, self.img_cols, self.channels)
-
         optimizer = SGD(lr=0.001, momentum=0.9)
 
         # build generator
@@ -42,7 +37,7 @@ class GAP():
                                    optimizer=optimizer,
                                    metrics=['accuracy'])
 
-        # for the combined model only discriminator will be trained
+        # for the combined model only generator will be trained
         self.discriminator.trainable = False
 
         # to sepcify the input and output of the GAP
@@ -54,15 +49,16 @@ class GAP():
 
         # the weight of the adversary loss
         # also the penalty coefficient
-        self.loss_x = 0.1
+        self.loss_x = 0.01
 
         # the model yield two results: img_prv and clasif_res
         self.combined = Model([z, noise], [img_prv, clasif_res])
 
         def pixel_mse_loss(y_true, y_pred):
-                return K.mean(K.square(y_true - y_pred))
+            return K.mean(K.square(y_true - y_pred))
 
-        self.combined.compile(optimizer=optimizer, loss=[pixel_mse_loss, "categorical_crossentropy"], loss_weights=[self.loss_x, 1])
+        self.combined.compile(optimizer=optimizer, loss=[
+                              pixel_mse_loss, "categorical_crossentropy"], loss_weights=[self.loss_x, 1])
 
     def read_data(self):
         # gender.txt: 0 for woman, 1 for man
@@ -101,8 +97,13 @@ class GAP():
             image_gender_label = raw_gender_label[i-1]
             image_smile_label = raw_smile_label[i-1]
             raw_image = np.asarray(image, dtype="int32")
-            data = np.reshape(raw_image, (32, 32, 1))
-            X_train.append(data)
+            # print(raw_image.shape)
+            data_raw = np.reshape(raw_image, (1024, ))
+            # print(data_raw.shape)
+            for j, pixel_value in enumerate(data_raw):
+                data_raw[j] = data_raw[j] / 255.0
+            data_n = np.reshape(data_raw, (32, 32, 1))
+            X_train.append(data_n)
             Y_gender.append([image_gender_label == "0",
                              image_gender_label == "1"])
             Y_smile.append([image_smile_label == "0",
@@ -123,7 +124,6 @@ class GAP():
         img_input_reshape_n = BatchNormalization()(img_input_reshape)
         img_input_dense = Dense(1)(img_input_reshape_n)
 
-        
         noise = Input(shape=(100, 1))
         noise_dense = Dense(1)(noise)
         img_cat = Concatenate(axis=1)([img_input_dense, noise_dense])
@@ -139,11 +139,11 @@ class GAP():
         dense3_a = LeakyReLU()(dense3)
         dense4 = Dense(1024)(dense3_a)
         dense4_a = Activation("tanh")(dense4)
-        # dense4_n = BatchNormalization()(dense4)
-        # final = 
-        # print("dense4: ", dense4)
+
+        final = Lambda(lambda x: x+1)(dense4_a)
+        # print("final: ", final)
         # # (?, 1024)
-        img_prv = Reshape((32, 32, 1), input_shape=(1024, ))(dense4_a)
+        img_prv = Reshape((32, 32, 1), input_shape=(1024, ))(final)
         # print("img_prv", img_prv)
         # # (?, 32, 32, 1)
 
@@ -180,7 +180,7 @@ class GAP():
 
         model.load_weights("adversary32.h5")
 
-        img_prv = Input(shape=self.img_shape)
+        img_prv = Input(shape=(32, 32, 1))
         clasify_res = model(img_prv)
 
         return Model(img_prv, clasify_res)
@@ -196,49 +196,43 @@ class GAP():
 
         for epoch in range(epochs):
 
-                # ---------------------
-                #  Train Discriminator
-                # --------------------
+            # ---------------------
+            #  Train Discriminator
+            # --------------------
 
-                # select random batch of images
-                ids = np.random.randint(0, 2723-1, batch_size)
-                imgs = X_data_raw[ids]
-                # print(imgs.shape)
-                gender_label = Y_gender_raw[ids]
-                smile_label = Y_smile_raw[ids]
+            # select random batch of images
+            ids = np.random.randint(0, 2723-1, batch_size)
+            imgs = X_data_raw[ids]
+            # print(imgs.shape)
+            gender_label = Y_gender_raw[ids]
+            smile_label = Y_smile_raw[ids]
 
-                # # generate random noise and concatenate to sampled images
-                # mu, sigma = 0, 0.1
-                # img_cons = np.asarray([
-                #     np.append(np.reshape(X, (1024, 1)), np.random.normal(mu, sigma, 100))
-                #     for X in imgs
-                # ])
+            # print(imgs[0][0])
+            # generate privatized images
+            prv_imgs = self.generator.predict(
+                [imgs, np.random.normal(0, 1, (batch_size, 100, 1))])
+            # print(prv_imgs[0][0])
 
-                # generate privatized images
-                prv_imgs = self.generator.predict([imgs, np.random.normal(0, 1, (batch_size, 100, 1))])
-                print(prv_imgs[0][0])
+            # train the discriminator
+            d_loss_prv = self.discriminator.train_on_batch(
+                prv_imgs, gender_label)
+            # print(d_loss_prv)
 
-                # train the discriminator
-                d_loss_prv = self.discriminator.train_on_batch(
-                        prv_imgs, gender_label)
-                # print(d_loss_prv)
+            # update penalty coefficient
+            self.loss_x = epoch * 0.01
 
-                # update penalty coefficient
-                # penalty_coef = epoch * 0.01
-                self.loss_x = epoch * 0.1
-
-                # ---------------------
-                #  Train Generator
-                # ---------------------
-                g_loss = self.combined.train_on_batch([imgs, np.random.normal(0, 1, (batch_size, 100, 1))], [imgs, gender_label])
-                # print("epoch:", epoch)
-                # print("d loss", d_loss_prv[0], d_loss_prv[1])
-                # print("g loss", g_loss)
-                # TODO: g_loss yield extremely large values, to debug
-                print("Epoch {0:3} [D loss: {1:10}, acc.: {2:8}%] [G loss: {3:10}; {4:10}; {5:10}]".format(
-                        epoch, d_loss_prv[0], 100*d_loss_prv[1], g_loss[0], g_loss[1], g_loss[2]))
+            # ---------------------
+            #  Train Generator
+            # ---------------------
+            g_loss = self.combined.train_on_batch(
+                [imgs, np.random.normal(0, 1, (batch_size, 100, 1))], [imgs, gender_label])
+            # print("epoch:", epoch)
+            # print("d loss", d_loss_prv[0], d_loss_prv[1])
+            # print("g loss", g_loss)
+            print("Epoch {0:3} [D loss: {1:15}, acc.: {2:8}%] [G loss: {3:15}; {4:15}; {5:15}]".format(
+                epoch, d_loss_prv[0], 100*d_loss_prv[1], g_loss[0], g_loss[1], g_loss[2]))
 
 
 if __name__ == "__main__":
     gap = GAP()
-    gap.train(epochs=50)
+    gap.train(epochs=100)
