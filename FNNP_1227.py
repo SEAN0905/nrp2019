@@ -27,13 +27,13 @@ from keras.optimizers import SGD
 dataset_path = "face32_relabeled/"
 
 
-def pixel_mae_loss(y_true, y_pred):
-    return K.mean(K.abs(y_true - y_pred))
+def pixel_mse_loss(y_true, y_pred):
+    return K.mean(K.square(y_true - y_pred))
 
 
 class GAP():
     def __init__(self):
-        self.optimizer = SGD(lr=0.01, momentum=0.9)
+        self.optimizer = SGD(lr=0.05, momentum=0.9)
 
         # build generator
         self.generator = self.build_generator()
@@ -55,14 +55,14 @@ class GAP():
 
         # the weight of the adversary loss
         # also the penalty term
-        self.loss_x = 1
+        self.loss_x = 2
 
         # the model takes two input: img_raw(z) and noise
         # yield two results: img_prv and clasif_res
         self.combined = Model([z, noise], [img_prv, clasif_res])
 
         self.combined.compile(optimizer=self.optimizer, loss=[
-                              pixel_mae_loss, "categorical_crossentropy"], loss_weights=[self.loss_x, 1])
+                              pixel_mse_loss, "categorical_crossentropy"], loss_weights=[self.loss_x, -1])
 
     def read_data(self):
         # gender.txt: 0 for woman, 1 for man
@@ -223,9 +223,9 @@ class GAP():
             # print(d_loss_prv)
 
             # update penalty coefficient
-            self.loss_x = epoch * 1
+            self.loss_x = epoch * 0.1 + 2
             self.combined.compile(optimizer=self.optimizer, loss=[
-                                  pixel_mae_loss, "categorical_crossentropy"], loss_weights=[self.loss_x, 1])
+                                  pixel_mse_loss, "categorical_crossentropy"], loss_weights=[self.loss_x, -1])
 
             # ---------------------
             #  Train Generator
@@ -235,8 +235,11 @@ class GAP():
             # print("epoch:", epoch)
             # print("d loss", d_loss_prv[0], d_loss_prv[1])
             # print("g loss", g_loss)
-            print("Epoch %d [D loss: %.5f, acc. : %.3f %%] [G loss: pixel_mae_loss: %.5f; categorical_crossentropy: %.5f; combined: %.5f]" % (
+        #     separate line to make it easier to read
+            print()
+            print("Epoch %d [D loss: %.5f, acc. : %.3f %%] [G loss: pixel_mse_loss: %.5f; categorical_crossentropy: %.5f; combined: %.5f]" % (
                 epoch, d_loss_prv[0], 100*d_loss_prv[1], g_loss[0], g_loss[1], g_loss[2]))
+            print()
 
 
 if __name__ == "__main__":
