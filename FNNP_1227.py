@@ -30,6 +30,9 @@ dataset_path = "face32_relabeled/"
 def pixel_mse_loss(y_true, y_pred):
     return K.mean(K.square(y_true - y_pred))
 
+def pixel_mae_loss(y_true, y_pred):
+    return K.mean(K.abs(y_true - y_pred))
+
 
 class GAP():
     def __init__(self):
@@ -55,7 +58,7 @@ class GAP():
 
         # the weight of the adversary loss
         # also the penalty term
-        self.loss_x = 2
+        self.loss_x = 4
 
         # the model takes two input: img_raw(z) and noise
         # yield two results: img_prv and clasif_res
@@ -223,7 +226,7 @@ class GAP():
             # print(d_loss_prv)
 
             # update penalty coefficient
-            self.loss_x = epoch * 0.1 + 2
+            self.loss_x = epoch * 0.5 + 4
             self.combined.compile(optimizer=self.optimizer, loss=[
                                   pixel_mse_loss, "categorical_crossentropy"], loss_weights=[self.loss_x, -1])
 
@@ -237,11 +240,14 @@ class GAP():
             # print("g loss", g_loss)
         #     separate line to make it easier to read
             print()
-            print("Epoch %d [D loss: %.5f, acc. : %.3f %%] [G loss: pixel_mse_loss: %.5f; categorical_crossentropy: %.5f; combined: %.5f]" % (
+            print("loss_x: %.1f" % self.loss_x)
+            print("Epoch %d [D loss: %.5f, acc. : %.3f %%] [G loss: combined: %.5f; pixel_mse_loss: %.5f; categorical_crossentropy: %.5f]" % (
                 epoch, d_loss_prv[0], 100*d_loss_prv[1], g_loss[0], g_loss[1], g_loss[2]))
             print()
+        
+        self.combined.save("gan_fnnp_lr0.05_weight_4.h5")
 
 
 if __name__ == "__main__":
     gap = GAP()
-    gap.train(epochs=60)
+    gap.train(epochs=70)
