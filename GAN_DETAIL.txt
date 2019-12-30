@@ -3,6 +3,39 @@ this file is to record details for each H5 file saved
 # Acc folder
 
 ## GAN_FNNP_0.05_2.1_acc
-Epoch 67 [D loss: 6.06491, acc. : 62.500 %] [G loss: combined: 8.57090; pixel_mse_loss: 1.6775360; categorical_crossentropy: 6.04429]
+lr = 0.05; loss = 2 + 0.1*epoch
+Epoch 56 [D loss: 5.81280, acc. : 64.062 %] [G loss: combined: 6.75025; pixel_mse_loss: 1.6476746; categorical_crossentropy: 5.79244]
+
+## GAN_FNNP_0.04_4_acc
+lr = 0.04; loss = 2 + 2*epoch
+Epoch 13 [D loss: 5.81323, acc. : 64.062 %] [G loss: combined: -5.35679; pixel_mse_loss: 0.0144393; categorical_crossentropy: 5.79244]
 
 # pixel_mse_loss folder
+
+## GAN_FNNP_0.05_2.1_loss
+lr = 0.05; loss = 2 + 0.1*epoch
+Epoch 28 [D loss: 7.32280, acc. : 54.688 %] [G loss: combined: -7.00855; pixel_mse_loss: 0.0728343; categorical_crossentropy: 7.37756]
+
+## GAN_FNNP_0.05_2.5_loss
+lr = 0.05, loss = 2 + 0.5*epoch
+Epoch 19 [D loss: 6.32043, acc. : 60.938 %] [G loss: combined: -6.51257; pixel_mse_loss: 0.0008319; categorical_crossentropy: 6.54798]
+
+## GAN_FNNP_0.04_3_loss
+lr = 0.04; loss = 2 + epoch
+Epoch 24 [D loss: 9.58717, acc. : 40.625 %] [G loss: combined: -9.51664; pixel_mse_loss: 0.0013952; categorical_crossentropy: 9.57012]
+
+## GAN_FNNP_0.04_4_loss
+lr = 0.04; loss = 2 + 2*epoch
+Epoch 37 [D loss: 8.10266, acc. : 50.000 %] [G loss: combined: -7.93946; pixel_mse_loss: 0.0009607; categorical_crossentropy: 8.05905]
+
+## GAN_FNNP_0.02_4_loss
+lr = 0.02; loss = 2+2*epoch
+Epoch 39 [D loss: 9.33017, acc. : 42.188 %] [G loss: combined: -9.29453; pixel_mse_loss: 0.0001478; categorical_crossentropy: 9.31827]
+
+## GAN_FNNP_0.05_1.1_loss
+lr = 0.05; loss = 1+0.1*epoch
+Epoch 53 [D loss: 7.32355, acc. : 54.688 %] [G loss: combined: -7.27854; pixel_mse_loss: 0.0007683; categorical_crossentropy: 7.30351]
+
+## GAN_FNNP_0.05_1.2_loss
+lr = 0.05; loss = 1+0.2*epoch
+Epoch 42 [D loss: 8.58371, acc. : 46.875 %] [G loss: combined: -8.27969; pixel_mse_loss: 0.0010790; categorical_crossentropy: 8.31089]

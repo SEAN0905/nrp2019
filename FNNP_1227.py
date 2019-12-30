@@ -230,7 +230,7 @@ class GAP():
             # print(d_loss_prv)
 
             # update penalty coefficient
-            self.loss_x = epoch * 0.1 + 2
+            self.loss_x = epoch * 0.2 + 1
             self.combined.compile(optimizer=self.optimizer, loss=[
                                   pixel_mse_loss, "categorical_crossentropy"], loss_weights=[self.loss_x, -1])
 
@@ -249,7 +249,7 @@ class GAP():
                 epoch, d_loss_prv[0], 100*d_loss_prv[1], g_loss[0], g_loss[1], g_loss[2]))
             print()
             if g_loss[1] < pixel_mse_loss_min:
-                self.combined.save("GAN_FNNP_lr_weight_tbn.h5")
+                self.combined.save("GAN_FNNP_lr_weight_loss.h5")
                 pixel_mse_loss_min = g_loss[1]
                 epoch_min = epoch
             if d_loss_prv[1] > max_adversary:
@@ -262,4 +262,4 @@ class GAP():
 
 if __name__ == "__main__":
     gap = GAP()
-    gap.train(epochs=70)
+    gap.train(epochs=60)
