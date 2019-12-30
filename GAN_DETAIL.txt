@@ -1,0 +1,8 @@
+this file is to record details for each H5 file saved
+
+# Acc folder
+
+## GAN_FNNP_0.05_2.1_acc
+Epoch 67 [D loss: 6.06491, acc. : 62.500 %] [G loss: combined: 8.57090; pixel_mse_loss: 1.6775360; categorical_crossentropy: 6.04429]
+
+# pixel_mse_loss folder

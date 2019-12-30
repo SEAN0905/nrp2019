@@ -36,7 +36,7 @@ def pixel_mae_loss(y_true, y_pred):
 
 class GAP():
     def __init__(self):
-        self.optimizer = SGD(lr=0.03, momentum=0.9)
+        self.optimizer = SGD(lr=0.05, momentum=0.9)
 
         # build generator
         self.generator = self.build_generator()
@@ -58,7 +58,7 @@ class GAP():
 
         # the weight of the adversary loss
         # also the penalty term
-        self.loss_x = 20
+        self.loss_x = 2
 
         # the model takes two input: img_raw(z) and noise
         # yield two results: img_prv and clasif_res
@@ -202,6 +202,8 @@ class GAP():
 
         pixel_mse_loss_min = 2
         epoch_min = -1
+        max_adversary = 0
+        epoch_max = -1
 
         for epoch in range(epochs):
 
@@ -228,7 +230,7 @@ class GAP():
             # print(d_loss_prv)
 
             # update penalty coefficient
-            self.loss_x = epoch * 1 + 20
+            self.loss_x = epoch * 0.1 + 2
             self.combined.compile(optimizer=self.optimizer, loss=[
                                   pixel_mse_loss, "categorical_crossentropy"], loss_weights=[self.loss_x, -1])
 
@@ -250,7 +252,12 @@ class GAP():
                 self.combined.save("GAN_FNNP_lr_weight_tbn.h5")
                 pixel_mse_loss_min = g_loss[1]
                 epoch_min = epoch
+            if d_loss_prv[1] > max_adversary:
+                    self.combined.save("GAN_FNNP_tbn_acc.h5")
+                    max_adversary = d_loss_prv[1]
+                    epoch_max = epoch
         print(epoch_min, pixel_mse_loss_min)
+        print(epoch_max, max_adversary)
 
 
 if __name__ == "__main__":
