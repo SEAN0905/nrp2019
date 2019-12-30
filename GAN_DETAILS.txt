@@ -1,0 +1,14 @@
+# GAN_FNNP_0.1_2.1.h5
+lr = 0.1, loss_x = 2 + 0.1*epoch
+Epoch 43 [D loss: 24.96063, acc. : 51.562 %] [G loss: combined: 9.13341; pixel_mse_loss: 0.00036; categorical_crossentropy: 8.05905]
+
+# GAN_FNNP_0.05_4.5.h5
+lr = 0.05, loss_x = 4 + 0.5*epoch
+Epoch 69 [D loss: 7.46756, acc. : 54.688 %] [G loss: combined: -7.34101; pixel_mse_loss: 0.00131; categorical_crossentropy: 7.55536]
+
+# GAN_FNNP_0.1_21.h5
+lr = 0.1, loss_x = 20 + 1*epoch
+Epoch 44 [D loss: 9.13194, acc. : 43.750 %] [G loss: combined: -8.99201; pixel_mse_loss: 0.00014; categorical_crossentropy: 9.06643]
+lr = 0.15,
+Epoch 29 [D loss: 8.35734, acc. : 48.438 %] [G loss: combined: -8.26258; pixel_mse_loss: 0.0000305; categorical_crossentropy: 8.31089]
+

@@ -1,0 +1,4 @@
+1. check minimal pixel_mse_loss
+2. save better log into GAN_DETAILS.txt
+3. update details there accordingly
+4. RENAME the h5 file to save the result

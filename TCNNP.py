@@ -5,76 +5,55 @@ import numpy as np
 import matplotlib.pyplot as plt
 from PIL import Image
 import tensorflow as tf
+import logging
+tf.get_logger().setLevel(logging.ERROR)
 import keras
 from keras import models, regularizers, optimizers, backend as K
 from keras.callbacks import EarlyStopping, ModelCheckpoint
 from keras.layers import Conv2D, Flatten, MaxPooling2D, Dense, BatchNormalization
-from keras.layers import Input, Reshape, LeakyReLU, Lambda
+from keras.layers import Input, Reshape, LeakyReLU, Lambda, Add
 from keras.layers import Concatenate, GaussianNoise, Conv2DTranspose
 from keras.models import Sequential, Model, load_model
 from keras.optimizers import SGD, Adam
 
 base_path = "face32_relabeled/"
 
-# set global variables
-global penalty_coef
-global distortion
-# set penalty term for privatizer loss function
-penalty_coef = 0.01
-# distortion to limit change to original image
-distortion = 0.1
+
+def pixel_mse_loss(y_true, y_pred):
+    return K.mean(K.square(y_true - y_pred))
 
 
-def privatizer_loss(y_true, y_pred):
-    # standard procedure with numpy as inputy
-    def _log_loss(input_tensors, eps=1e-15):
-        # unpack input tensors
-        _y_true, _y_pred = input_tensors
-        # Prepare numpy array data
-        _y_true = np.array(_y_true)
-        # print(y_true.shape)
-        _y_pred = np.array(_y_pred)
-        # print(y_pred.shape)
+def pixel_mae_loss(y_true, y_pred):
+    return K.mean(K.abs(y_true - y_pred))
 
-        # clip the y_pred
-        p = np.clip(_y_pred, eps, 1-eps)
-        loss = np.sum(- _y_true * np.log(p) - (1 - _y_true) * np.log(1-p))
-        log_loss = loss / len(_y_true)
-
-        distortion_punishment = penalty_coef * max(0, np.mean(np.square(_y_true - _y_pred) - distortion))
-        return log_loss + distortion_punishment
-        
-    # wrap python function as an operation in tensorflow graph
-    return tf.numpy_function(_log_loss, [y_true, y_pred], tf.float32)
 
 class GAP():
     def __init__(self):
-        X_raw, Y_gender, Y_smile = self.read_data()
 
-        # TODO: tune learning rate of optimizer
         optimizer = SGD(lr=0.01, momentum=0.9)
-
-        # parameter for random noise
-        self.mu, self.sigma = 0, 0.1
-        # TODO: find proper way for linear projection
-        noise = tf.random.normal((4, 4, 256), self.mu, self.sigma)
 
         self.generator = self.build_generator()
 
         self.discriminator = self.build_discriminator()
-        self.discriminator.compile(loss="categorical_crossentropy", optimizer=optimizer, metrics=["accuracy"])
-        
+        self.discriminator.compile(
+            loss="categorical_crossentropy", optimizer=optimizer, metrics=["accuracy"])
+
+        # only generator will be trained
+        self.discriminator.trainable = False
+
         img_raw = Input(shape=(1024, 1))
-        img_prv = tf.add(self.generator(tf.random.normal((4, 4, 251), self.mu, self.sigma)), img_raw)
+        noise = Input(shape=(4, 4, 256))
+        img_prv = self.generator([img_raw, noise])
         clasif_res = self.discriminator(img_prv)
 
         # weight of adversary loss
         self.loss_x = 0.1
 
-        self.combined = Model(img_raw, [img_prv, clasif_res])
+        self.combined = Model([img_raw, noise], [img_prv, clasif_res])
 
         # TODO: to be updated after FNNP model
-        self.combined.compile(optimizer=optimizer, loss=[privatizer_loss, "categorical_crossentropy"], loss_weights=[1, self.loss_x])
+        self.combined.compile(optimizer=optimizer, loss=[
+                              pixel_mse_loss, "categorical_crossentropy"], loss_weights=[self.loss_x, -1])
 
     def read_data(self):
        # gender.txt: 0 for woman, 1 for man
@@ -113,15 +92,20 @@ class GAP():
             image_gender_label = raw_gender_label[i-1]
             image_smile_label = raw_smile_label[i-1]
             raw_image = np.asarray(image, dtype="int32")
-            data = np.reshape(raw_image, (1024, ))
-            X_train.append(data)
-            Y_gender.append([image_gender_label == "0", image_gender_label == "1"])
-            Y_smile.append([image_smile_label == "0", image_smile_label == "1"])
+            data_raw = np.reshape(raw_image, (1024, ))
+            for j, pixel_value in enumerate(data_raw):
+                data_raw[j] = data_raw[j] / 255.0
+            data_n = np.reshape(data_raw, (1024, 1))
+            X_train.append(data_n)
+            Y_gender.append([image_gender_label == "0",
+                             image_gender_label == "1"])
+            Y_smile.append([image_smile_label == "0",
+                            image_smile_label == "1"])
         #     print(Y_gender[1:6])
         #     print(Y_smile[1:6])
         # # [[False, True], [False, True], [True, False], [True, False], [True, False]]
         # # [[False, True], [False, True], [False, True], [False, True], [False, True]]
-        return np.asarray(X_train), np.asarray(Y_gender), np.asarray(Y_smile) 
+        return np.asarray(X_train), np.asarray(Y_gender), np.asarray(Y_smile)
 
     def build_generator(self):
         # the function to initialize a privatizer(generator)
@@ -130,20 +114,34 @@ class GAP():
 
         # TODO: supposedly tf.shape(noise_input) is (4, 4, 256)
         # Yet actual result is (4, )
-        noise_input = Input(shape=(4, 4, 256))
-        print(tf.shape(noise_input))
+        # noise_input = Input(shape=(4, 4, 256))
+        noise_input = Input(shape=(4096, 1))
+        noise_reshape = Reshape((256, 4, 4))(noise_input)
+        print(noise_reshape)
 
-        deconv1 = Conv2DTranspose(filters=128, kernel_size=(3, 3), strides=2, activation="relu", data_format="channels_last")(noise_input)
+        deconv1 = Conv2DTranspose(filters=128, kernel_size=(
+            3, 3), strides=2, activation="relu")(noise_reshape)
         batch1 = BatchNormalization()(deconv1)
-        print(tf.shape(batch1))
-        deconv2 = Conv2DTranspose(filters=16, kernel_size=(3, 3), strides=2, activation="tanh", data_format="channels_last")(batch1)
+        print(batch1)
+        deconv2 = Conv2DTranspose(filters=16, kernel_size=(
+            3, 3), strides=2, activation="tanh")(batch1)
         batch2 = BatchNormalization()(deconv2)
-        print(tf.shape(batch2))
-        deconv3 = Conv2DTranspose(filters=1, kernel_size=(3, 3), strides=2, activation="tanh", data_format="channels_last")(batch2)
+        print(batch2)
+        deconv3 = Conv2DTranspose(filters=1, kernel_size=(
+            3, 3), strides=2, activation="tanh")(batch2)
         batch3 = BatchNormalization()(deconv3)
-        print(tf.shape(batch3))
-        result = Reshape((1024, ), input_shape=(32, 32, 1))(batch3)
-        return Model(noise_input, result)
+        print(batch3)
+        batch3_reshape = Reshape((1024, 1), input_shape=(32, 32, 1))(batch3)
+
+        img_input = Input(shape=(1024, 1))
+        img_input_n = BatchNormalization()(img_input)
+        img_input_dense = Dense(1)(img_input_n)
+
+        result = Add()([img_input_dense, batch3_reshape])
+
+        final = Reshape((32, 32, 1))(result)
+
+        return Model([noise_input, img_input], final)
 
     def build_discriminator(self):
         # to initialize the pre-trained discriminator
@@ -181,7 +179,7 @@ class GAP():
         clasify_res = model(img_prv)
 
         return Model(img_prv, clasify_res)
-    
+
     def train(self, epochs, batch_size=64, sample_interval=50):
         # load raw data
         X_data_raw, Y_gender_raw, Y_smile_raw = self.read_data()
@@ -201,9 +199,14 @@ class GAP():
             gender_label = Y_gender_raw[ids]
             smile_label = Y_smile_raw[ids]
 
+            # parameter for random noise
+            self.mu, self.sigma = 0, 0.1
+            # TODO: find proper way for linear projection
+            noise = tf.random.normal((4, 4, 256), self.mu, self.sigma)
+
             # generate privatized images
-            # prv_imgs = self.generator.predict(img_cons)
-            prv_imgs = tf.add(self.generator.predict(tf.random.normal((4, 4, 256), self.mu, self.sigma)), imgs)
+            prv_imgs = self.generator(
+                [imgs, np.random.normal(0, 1, (batch_size, 4, 4, 256))])
 
             # train the discriminator
             d_loss_prv = self.discriminator.train_on_batch(
@@ -211,17 +214,20 @@ class GAP():
             # print(d_loss_prv)
 
             # update penalty coefficient
-            penalty_coef = epoch * 0.01
+            self.loss_x = epoch * 0.01
 
             # ---------------------
             #  Train Generator
             # ---------------------
-            g_loss = self.combined.train_on_batch(imgs, (imgs, gender_label))
-            print("Epoch {0:3} [D loss: {1:20}, acc.: {2:8}%] [G loss: {3:20}]".format(
-                epoch, d_loss_prv[0], 100*d_loss_prv[1], g_loss))
+            g_loss = self.combined.train_on_batch(
+                [imgs, np.random.normal(0, 1, (batch_size, 4, 4, 256))], [imgs, gender_label])
+            print()
+            print("loss_x: %.1f" % self.loss_x)
+            print("Epoch %d [D loss: %.5f, acc. : %.3f %%] [G loss: combined: %.5f; pixel_mse_loss: %.5f; categorical_crossentropy: %.5f]" % (
+                epoch, d_loss_prv[0], 100*d_loss_prv[1], g_loss[0], g_loss[1], g_loss[2]))
+            print()
 
 
 if __name__ == "__main__":
     gap = GAP()
     gap.train(epochs=20)
-

@@ -1,7 +1,0 @@
-# gan_fnnp_lr0.1_weight_2_1.h5
-lr = 0.1, loss_x = 2 + 0.1*epoch
-Epoch 69 [D loss: 8.09299, acc. : 50.000 %] [G loss: combined: -7.86229; pixel_mae_loss: 0.01829; categorical_crossentropy: 8.05905]
-
-# gan_fnnp_lr0.05_weight_4.h5
-lr = 0.05, loss_x = 4 + 0.5*epoch
-Epoch 69 [D loss: 7.46756, acc. : 54.688 %] [G loss: combined: -7.34101; pixel_mse_loss: 0.00131; categorical_crossentropy: 7.55536]
