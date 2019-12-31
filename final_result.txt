@@ -1,18 +1,61 @@
 Result:
 
-Noise training:  uniform_noise
-Noise parameter: mse:  0.0001478
-Gender accuracy:  [3.3927014958721546, 0.786265148733015]
+# laplace_noise
 
-Result:
-Noise training:  laplace_noise
-Noise parameter: mse:  0.0001478
-Gender accuracy:  [3.392707090434597, 0.786265148733015]
+mse:  0.0001478
+Gender accuracy: 0.972
 
-Noise training:  uniform_noise
-Noise parameter: mse:  0.0007683
-Gender accuracy:  [3.392718200407665, 0.786265148733015]
+mse:  0.0007683
+Gender accuracy: 0.970
 
-Noise training:  laplace_noise
-Noise parameter: mse:  10
-Gender accuracy:  [4.26523618227137, 0.7344840249724568]
+mse:  0.0009607
+Gender accuracy: 0.969
+
+mse:  0.0010790
+Gender accuracy: 0.969
+
+mse:  0.0013952
+Gender accuracy: 0.969
+
+mse:  0.0018208
+Gender accuracy: 0.968
+
+# uniform_noise
+
+mse:  0.0001478
+Gender accuracy:  0.972
+
+mse:  0.0007683
+Gender accuracy:  0.970
+
+mse:  0.0009607
+Gender accuracy:  0.970
+
+mse:  0.0010790
+Gender accuracy:  0.970
+
+mse:  0.0013952
+Gender accuracy:  0.970
+
+mse:  0.0018208
+Gender accuracy:  0.970
+
+# GAP
+
+mse: 0.0001478
+Gender accuracy: 0.628
+
+mse: 0.0007683
+Gender accuracy: 0.547
+
+mse: 0.0009607
+Gender accuracy: 0.521
+
+mse: 0.0010790
+Gender accuracy: 0.518
+
+mse: 0.0013952
+Gender accuracy: 0.519
+
+mse: 0.0018208
+Gender accuracy: 0.503

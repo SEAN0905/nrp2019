@@ -106,8 +106,9 @@ def build_discriminator():
     return Model(img_prv, clasify_res)
 
 
-mse_distortion = 0.0001478 * 256 * 256
-sqrt_mse_distortion = math.sqrt(mse_distortion)
+mse_distortion = 0.0018208
+actual_mse_distortion = mse_distortion * 256 * 256
+sqrt_mse_distortion = math.sqrt(actual_mse_distortion)
 
 # independent random noise generator
 uniform_noise = np.random.uniform(
@@ -146,7 +147,7 @@ print("Noise training: ", noise_trained_name)
 print("Noise parameter: mse: ", mse_distortion)
 print("Gender accuracy: ", gender_acc)
 
-image_name = "test" + noise_trained_name + "_" + str(round(mse_distortion, 5))
+image_name = noise_trained_name + "_" + str(round(mse_distortion, 5))
 
 sample_raw_img = np.reshape(X_train_raw[111], (32, 32))
 # print(sample_raw_img)
