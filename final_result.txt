@@ -1,0 +1,18 @@
+Result:
+
+Noise training:  uniform_noise
+Noise parameter: mse:  0.0001478
+Gender accuracy:  [3.3927014958721546, 0.786265148733015]
+
+Result:
+Noise training:  laplace_noise
+Noise parameter: mse:  0.0001478
+Gender accuracy:  [3.392707090434597, 0.786265148733015]
+
+Noise training:  uniform_noise
+Noise parameter: mse:  0.0007683
+Gender accuracy:  [3.392718200407665, 0.786265148733015]
+
+Noise training:  laplace_noise
+Noise parameter: mse:  10
+Gender accuracy:  [4.26523618227137, 0.7344840249724568]

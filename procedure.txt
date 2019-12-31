@@ -1,4 +1,6 @@
-1. check minimal pixel_mse_loss
-2. save better log into GAN_DETAILS.txt
-3. update details there accordingly
-4. RENAME the h5 file to save the result
+Todoist today:
+1. write noise generator: independent uniform noise and laplace noise
+2. generate privatized images after three different mechanisms
+3. predict accuracy of facial expression and save data
+4. predict accuracy of gender and save data
+5. draw graph of 3 and 4

@@ -44,7 +44,7 @@ Epoch 42 [D loss: 8.58371, acc. : 46.875 %] [G loss: combined: -8.27969; pixel_m
 lr = 0.05; loss = 2+0.2*epoch
 Epoch 30 [D loss: 9.33421, acc. : 42.188 %] [G loss: combined: -9.28583; pixel_mse_loss: 0.0023499; categorical_crossentropy: 9.31827]
 
-## GAN_FNNP_0.05_2.3_loss
+## GAN_FNNP_0.05_2.3_loss *
 lr = 0.05; loss = 2 + 0.3*loss
 Epoch 26 [D loss: 9.65675, acc. : 40.625 %] [G loss: combined: -8.95632; pixel_mse_loss: 0.0018208; categorical_crossentropy: 9.06643]
 
