@@ -100,7 +100,8 @@ def build_discriminator():
         Flatten(),
         Dense(2, activation='softmax')
     ])
-    model.load_weights("adversary32.h5")
+    # model.load_weights("adversary32.h5")
+    model.load_weights("smile_classifier.h5py")
     img_prv = Input(shape=(32, 32, 1))
     clasify_res = model(img_prv)
     return Model(img_prv, clasify_res)
@@ -136,24 +137,30 @@ for i in range(2723):
         for k in range(32):
             prv_imgs_input[i][j][k] = prv_imgs_input[i][j][k] / 255.0
 
-gender_classifier = build_discriminator()
-gender_classifier.compile(optimizer=SGD(
+# gender_classifier = build_discriminator()
+# gender_classifier.compile(optimizer=SGD(
+#     lr=0.015, momentum=0.9), loss="categorical_crossentropy", metrics=["acc"])
+
+smile_classifier = build_discriminator()
+smile_classifier.compile(optimizer=SGD(
     lr=0.015, momentum=0.9), loss="categorical_crossentropy", metrics=["acc"])
+
+
 print("Start to predict")
-gender_acc = gender_classifier.evaluate(prv_imgs_input, Y_gender)
+smile_acc = smile_classifier.evaluate(prv_imgs_input, Y_gender)
 
 print("Result:")
 print("Noise training: ", noise_trained_name)
 print("Noise parameter: mse: ", mse_distortion)
-print("Gender accuracy: ", gender_acc)
+print("Smile accuracy: ", smile_acc)
 
-image_name = noise_trained_name + "_" + str(round(mse_distortion, 5))
+# image_name = noise_trained_name + "_" + str(round(mse_distortion, 5))
 
-sample_raw_img = np.reshape(X_train_raw[111], (32, 32))
-# print(sample_raw_img)
-img = Image.fromarray(np.uint8(sample_raw_img), 'L')
-img.save(image_name + '_original.png')
+# sample_raw_img = np.reshape(X_train_raw[111], (32, 32))
+# # print(sample_raw_img)
+# img = Image.fromarray(np.uint8(sample_raw_img), 'L')
+# img.save(image_name + '_original.png')
 
-sample_prv_img = np.reshape(prv_imgs[111], (32, 32))
-img = Image.fromarray(np.uint8(sample_prv_img), 'L')
-img.save(image_name + '_prv.png')
+# sample_prv_img = np.reshape(prv_imgs[111], (32, 32))
+# img = Image.fromarray(np.uint8(sample_prv_img), 'L')
+# img.save(image_name + '_prv.png')
