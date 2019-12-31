@@ -107,7 +107,7 @@ def build_discriminator():
     return Model(img_prv, clasify_res)
 
 
-mse_distortion = 0.0018208
+mse_distortion = 0.0018308
 actual_mse_distortion = mse_distortion * 256 * 256
 sqrt_mse_distortion = math.sqrt(actual_mse_distortion)
 
@@ -119,7 +119,7 @@ uniform_noise = np.random.uniform(
 laplace_noise = np.random.laplace(
     loc=sqrt_mse_distortion, scale=mse_distortion, size=(2723, 32, 32, 1))
 
-noise_trained_name = "laplace_noise"
+noise_trained_name = "uniform_noise"
 
 if noise_trained_name == "uniform_noise":
     noise_training = uniform_noise
@@ -147,14 +147,16 @@ smile_classifier.compile(optimizer=SGD(
 
 
 print("Start to predict")
-smile_acc = smile_classifier.evaluate(prv_imgs_input, Y_gender)
+smile_acc = smile_classifier.evaluate(prv_imgs_input, Y_smile)
+# smile_acc_or = smile_classifier.evaluate(X_train_raw, Y_smile)
 
 print("Result:")
 print("Noise training: ", noise_trained_name)
 print("Noise parameter: mse: ", mse_distortion)
-print("Smile accuracy: ", smile_acc)
+print("Smile accuracy: ", round(smile_acc[1], 3))
+# print("Smile original accuracy: ", smile_acc_or)
 
-# image_name = noise_trained_name + "_" + str(round(mse_distortion, 5))
+# image_name = "test" + noise_trained_name + "_" + str(round(mse_distortion, 5))
 
 # sample_raw_img = np.reshape(X_train_raw[111], (32, 32))
 # # print(sample_raw_img)
