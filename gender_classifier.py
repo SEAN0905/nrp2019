@@ -99,7 +99,7 @@ history = model.fit_generator(
 
 print(history.history.keys())
 # model.save_weights("adversary_gen_overall_32.h5")
-
+plt.gca().set_ylim([0.5, 1])
 plt.plot(history.history["acc"])
 plt.plot(history.history["val_acc"])
 plt.title("model accuracy")
@@ -110,6 +110,7 @@ plt.show()
 # plt.savefig("Classifier_smile_accuracy.png")
 plt.close()
 
+plt.gca().set_ylim([0, 0.7])
 plt.plot(history.history["loss"])
 plt.plot(history.history["val_loss"])
 plt.title('model loss')
