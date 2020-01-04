@@ -107,7 +107,7 @@ def build_discriminator():
     return Model(img_prv, clasify_res)
 
 
-mse_distortion = 0.0018308
+mse_distortion = 0.09
 actual_mse_distortion = mse_distortion * 256 * 256
 sqrt_mse_distortion = math.sqrt(actual_mse_distortion)
 
@@ -125,6 +125,8 @@ if noise_trained_name == "uniform_noise":
     noise_training = uniform_noise
 elif noise_trained_name == "laplace_noise":
     noise_training = laplace_noise
+
+print("std", np.std(noise_training))
 
 X_train_raw, Y_gender, Y_smile = read_data()
 random_noise_model = build_model()
