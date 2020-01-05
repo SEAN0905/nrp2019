@@ -91,32 +91,40 @@ callbacks = [
 history = model.fit_generator(
     train_generator,
     # # update based on change in batch size
-    steps_per_epoch=3571 // 32,
-    validation_steps=3571 // 32,
-    epochs=20,
+    steps_per_epoch=2822 // 32,
+    validation_steps=2822 // 32,
+    epochs=19,
     validation_data=validation_generator,
     callbacks=callbacks)
 
 print(history.history.keys())
-# model.save_weights("smile_overall.h5")
-plt.gca().set_ylim([0.5, 1])
-plt.plot(history.history["acc"])
-plt.plot(history.history["val_acc"])
-plt.title("model accuracy")
-plt.ylabel('accuracy')
-plt.xlabel('epoch')
-plt.legend(['train', 'test'], loc='upper left')
-plt.show()
-plt.savefig("Classifier_smile_accuracy.png")
-plt.close()
+key_list = ['val_loss', 'val_acc', 'loss', 'acc']
+for i in range(4):
+    current_key = key_list[i]
+    print("\n")
+    print(current_key)
+    for epoch_number in range(19):
+        print(str(epoch_number+1) +  ", " + str(history.history[current_key][epoch_number]))
+        
+# # model.save_weights("smile_overall.h5")
+# plt.gca().set_ylim([0.5, 1])
+# plt.plot(history.history["acc"])
+# plt.plot(history.history["val_acc"])
+# plt.title("model accuracy")
+# plt.ylabel('accuracy')
+# plt.xlabel('epoch')
+# plt.legend(['train', 'test'])
+# plt.show()
+# plt.savefig("Classifier_smile_accuracy.png")
+# plt.close()
 
-plt.gca().set_ylim([0, 0.7])
-plt.plot(history.history["loss"])
-plt.plot(history.history["val_loss"])
-plt.title('model loss')
-plt.ylabel('loss')
-plt.xlabel('epoch')
-plt.legend(['train', 'test'], loc='upper left')
-plt.show()
-plt.savefig("Classifier_loss.png")
-plt.close()
+# plt.gca().set_ylim([0, 0.7])
+# plt.plot(history.history["loss"])
+# plt.plot(history.history["val_loss"])
+# plt.title('model loss')
+# plt.ylabel('loss')
+# plt.xlabel('epoch')
+# plt.legend(['train', 'test'])
+# plt.show()
+# plt.savefig("Classifier_loss.png")
+# plt.close()
