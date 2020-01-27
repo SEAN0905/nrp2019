@@ -266,10 +266,15 @@ if __name__ == "__main__":
     imgs, final_result = gap.train(epochs=50, mini_epochs=5)
     print(final_result)
     mini, maxi = 10, 0
+    o_img = [[[None for k in range(32)] for j in range(32)] for i in range(64)]
+    p_img = [[[None for k in range(32)] for j in range(32)] for i in range(64)]
     for k in range(64):
         for i in range(32):
             for j in range(32):
-                final_result[k][i][j][0] = int((final_result[k][i][j][0] + 1e-7) * 128)
+                p_img[k][i][j] = int(final_result[k][i][j][0] * 256*256)
+                o_img[k][i][j] = int(imgs[k][i][j][0] * 256*256)
+                # p_img[k][i][j] = int((final_result[k][i][j][0] + 1e-7) * 128)
+                # o_img[k][i][j] = int((imgs[k][i][j][0] + 1.1e-7) * 128)
     #             mini = min(final_result[k][j][i][0], mini)
     #             maxi = max(final_result[k][j][i][0], maxi)
     #             print(pxl_value, end=" ")
@@ -278,7 +283,7 @@ if __name__ == "__main__":
     # print()
         # for i in range(32):
         #     for j in range(32):
-                imgs[k][i][j][0] = int((imgs[k][i][j][0] + 1.1e-7) * 128)
+                # imgs[k][i][j][0] = int((imgs[k][i][j][0] + 1.1e-7) * 128)
     #             mini = min(pxl_value, mini)
     #             maxi = max(pxl_value, maxi)
     #             print(pxl_value, end=" ")
@@ -288,8 +293,8 @@ if __name__ == "__main__":
     # print(mini, maxi)
     # print("Please be reminded to update the name of h5 file.")
         img_name = str(k) + "_generate.png"
-        img = Image.fromarray(np.uint8(final_result[k], 'L'))
+        img = Image.fromarray(np.uint8(p_img[k]), 'L')
         img.save(img_name)
         img_name = str(k) + "_original.png"
-        img = Image.fromarray(np.uint8(imgs[k], 'L'))
+        img = Image.fromarray(np.uint8(o_img[k]), 'L')
         img.save(img_name)
