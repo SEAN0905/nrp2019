@@ -36,7 +36,7 @@ def pixel_mae_loss(y_true, y_pred):
 
 class GAP():
     def __init__(self):
-        self.optimizer = SGD(lr=0.05, momentum=0.9)
+        self.optimizer = SGD(lr=0.02, momentum=0.9)
 
         # build generator
         self.generator = self.build_generator()
@@ -47,8 +47,8 @@ class GAP():
                                    optimizer=self.optimizer,
                                    metrics=['accuracy'])
 
-        # for the combined model only generator will be trained
-        self.discriminator.trainable = False
+        # # for the combined model only generator will be trained
+        # self.discriminator.trainable = False
 
         # to sepcify the input and output of the GAP
         z = Input(shape=(32, 32, 1))
@@ -192,7 +192,7 @@ class GAP():
 
         return Model(img_prv, clasify_res)
 
-    def train(self, epochs, batch_size=64, sample_interval=50):
+    def train(self, epochs, mini_epochs, batch_size=64, sample_interval=50):
         # load raw data
         X_data_raw, Y_gender_raw, Y_smile_raw = self.read_data()
         assert not np.any(np.isnan(X_data_raw))
@@ -225,10 +225,13 @@ class GAP():
             # print(prv_imgs[0][0])
 
             # train the discriminator
-            d_loss_prv = self.discriminator.train_on_batch(
-                prv_imgs, gender_label)
-            # print(d_loss_prv)
-
+            for j in range(mini_epochs):
+                d_loss_prv = self.discriminator.train_on_batch(
+                    prv_imgs, gender_label)
+                # print(d_loss_prv)
+            
+            # freeze discrimnator to train privatizer only
+            self.discriminator.trainable = False
             # update penalty coefficient
             self.loss_x = epoch * 0.3 + 2
             self.combined.compile(optimizer=self.optimizer, loss=[
@@ -239,6 +242,9 @@ class GAP():
             # ---------------------
             g_loss = self.combined.train_on_batch(
                 [imgs, np.random.normal(0, 1, (batch_size, 100, 1))], [imgs, gender_label])
+            
+            # freeze the discriminator to better train the model
+            self.discriminator.trainable = True
             # print("epoch:", epoch)
             # print("d loss", d_loss_prv[0], d_loss_prv[1])
             # print("g loss", g_loss)
@@ -262,4 +268,5 @@ class GAP():
 
 if __name__ == "__main__":
     gap = GAP()
-    gap.train(epochs=50)
+    gap.train(epochs=50, mini_epochs=5)
+    print("Please be reminded to update the name of h5 file.")
