@@ -25,12 +25,92 @@ def pixel_mse_loss(y_true, y_pred):
 def pixel_mae_loss(y_true, y_pred):
     return K.mean(K.abs(y_true - y_pred))
 
+def build_generator():
+        # the function to initialize a privatizer(generator)
+        # input: raw image
+        # output: privatized image
+
+        img_input = Input(shape=(32, 32, 1))
+        img_input_reshape = Reshape((1024, 1))(img_input)
+        img_input_reshape_n = BatchNormalization()(img_input_reshape)
+        img_input_dense = Dense(1)(img_input_reshape_n)
+
+        noise = Input(shape=(100, 1))
+        noise_dense = Dense(1)(noise)
+        img_cat = Concatenate(axis=1)([img_input_dense, noise_dense])
+        # print("img_cat", img_cat)
+        # # (?, 1124, 1)
+
+        receiver = Flatten()(img_cat)
+        dense1 = Dense(1024)(receiver)
+        dense1_a = LeakyReLU()(dense1)
+        dense2 = Dense(1024)(dense1_a)
+        dense2_a = LeakyReLU()(dense2)
+        dense3 = Dense(1024)(dense2_a)
+        dense3_a = LeakyReLU()(dense3)
+        dense4 = Dense(1024)(dense3_a)
+        dense4_a = Activation("tanh")(dense4)
+
+        final = Lambda(lambda x: x+1)(dense4_a)
+        # print("final: ", final)
+        # # (?, 1024)
+        img_prv = Reshape((32, 32, 1), input_shape=(1024, ))(final)
+        # print("img_prv", img_prv)
+        # # (?, 32, 32, 1)
+
+        return Model([img_input, noise], img_prv)
+
+def build_discriminator():
+        # to initialize the pre-trained discriminator
+        # input: privatized image from generator
+        # output: classification result
+
+        model = Sequential([
+            Conv2D(
+                filters=32,
+                kernel_size=(3, 3),
+                padding='same',
+                activation='relu', input_shape=(32, 32, 1)),
+            BatchNormalization(),
+            MaxPooling2D(pool_size=(2, 2)),
+            Conv2D(filters=64, kernel_size=(3, 3),
+                   padding='same', activation='relu'),
+            BatchNormalization(),
+            MaxPooling2D(pool_size=(2, 2)),
+            Dense(1024, kernel_initializer='random_uniform',
+                  activation='relu', kernel_regularizer=regularizers.l2(0.00001)),
+            BatchNormalization(),
+            Dense(1024, kernel_initializer='random_uniform',
+                  activation='relu', kernel_regularizer=regularizers.l2(0.00001)),
+            BatchNormalization(),
+            Flatten(),
+            Dense(2, activation='softmax')
+        ])
+
+        # model.summary()
+
+        model.load_weights("adversary32.h5")
+
+        img_prv = Input(shape=(32, 32, 1))
+        clasify_res = model(img_prv)
+
+        return Model(img_prv, clasify_res)
+
+discriminator = build_discriminator()
+generator = build_generator()
+
+z = Input(shape=(32, 32, 1))
+noise = Input(shape=(100, 1))
+img_prv = generator([z, noise])
+clasif_res = discriminator(img_prv)
+combined_model = Model([z, noise], [img_prv, clasif_res])
 
 optimizer = SGD(lr=0.05, momentum=0.9)
+path_model_to_eval = "mse0.005_acc53_weights.h5"
 
-path_model_to_eval = "H5_file/GAN_FNNP_0.02_4_loss.h5"
+combined_model.summary()
+combined_model.load_weights(path_model_to_eval)
 
-combined_model = load_model(path_model_to_eval)
 combined_model.compile(optimizer=optimizer, loss=[
                pixel_mse_loss, "categorical_crossentropy"], loss_weights=[2.1, 1])
 

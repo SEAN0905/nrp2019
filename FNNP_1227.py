@@ -36,7 +36,7 @@ def pixel_mae_loss(y_true, y_pred):
 
 class GAP():
     def __init__(self):
-        self.optimizer = SGD(lr=0.02, momentum=0.9)
+        self.optimizer = SGD(lr=0.09, momentum=0.9)
 
         # build generator
         self.generator = self.build_generator()
@@ -192,6 +192,12 @@ class GAP():
 
         return Model(img_prv, clasify_res)
 
+    def evaluate(self):
+        # load raw data
+        X_data_raw, Y_gender, Y_smile = self.read_data()
+        score = self.combined.evaluate([X_data_raw, np.random(0, 1, (2723, 100, 1))], [X_data_raw, Y_gender])
+        print("score", score)
+
     def train(self, epochs, mini_epochs, batch_size=64, sample_interval=50):
         # load raw data
         X_data_raw, Y_gender_raw, Y_smile_raw = self.read_data()
@@ -222,7 +228,7 @@ class GAP():
             # generate privatized images
             prv_imgs = self.generator.predict(
                 [imgs, np.random.normal(0, 1, (batch_size, 100, 1))])
-            # print(prv_imgs[0][0])
+            print(prv_imgs[0])
 
             # train the discriminator
             for j in range(mini_epochs):
@@ -233,13 +239,11 @@ class GAP():
             # freeze discrimnator to train privatizer only
             self.discriminator.trainable = False
             # update penalty coefficient
-            self.loss_x = epoch * 0.3 + 2
+            self.loss_x = epoch * 1 + 2
             self.combined.compile(optimizer=self.optimizer, loss=[
                                   pixel_mse_loss, "categorical_crossentropy"], loss_weights=[self.loss_x, -1])
 
-            # ---------------------
             #  Train Generator
-            # ---------------------
             g_loss = self.combined.train_on_batch(
                 [imgs, np.random.normal(0, 1, (batch_size, 100, 1))], [imgs, gender_label])
             
@@ -248,25 +252,30 @@ class GAP():
             # print("epoch:", epoch)
             # print("d loss", d_loss_prv[0], d_loss_prv[1])
             # print("g loss", g_loss)
-        #     separate line to make it easier to read
+            # separate line to make it easier to read
             print()
             print("loss_x: %.1f" % self.loss_x)
             print("Epoch %d [D loss: %.5f, acc. : %.3f %%] [G loss: combined: %.5f; pixel_mse_loss: %.7f; categorical_crossentropy: %.5f]" % (
                 epoch, d_loss_prv[0], 100*d_loss_prv[1], g_loss[0], g_loss[1], g_loss[2]))
             print()
-            if g_loss[1] < pixel_mse_loss_min:
-                self.combined.save("GAN_FNNP_lr_weight_loss.h5")
+            if g_loss[1] < pixel_mse_loss_min and g_loss[1] < 0.05 and d_loss_prv[1] < 0.6 and d_loss_prv[1] >= 0.5:
+                # self.combined.save("GAN_FNNP_lr_weight_loss.h5")
+                self.combined.save_weights("mse_save_weights.h5")
                 pixel_mse_loss_min = g_loss[1]
                 epoch_min = epoch
-            if d_loss_prv[1] > max_adversary:
-                self.combined.save("GAN_FNNP_tbn_acc.h5")
-                max_adversary = d_loss_prv[1]
-                epoch_max = epoch
+                break
+            # if d_loss_prv[1] > max_adversary:
+            #     self.combined.save("GAN_FNNP_tbn_acc.h5")
+            #     self.combined.save_weights("acc_save_weights.h5")
+            #     max_adversary = d_loss_prv[1]
+            #     epoch_max = epoch
+            self.combined.trainable = True
         print(epoch_min, pixel_mse_loss_min)
-        print(epoch_max, max_adversary)
+        # print(epoch_max, max_adversary)
 
 
 if __name__ == "__main__":
     gap = GAP()
     gap.train(epochs=50, mini_epochs=5)
     print("Please be reminded to update the name of h5 file.")
+    # gap.evaluate()
